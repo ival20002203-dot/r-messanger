@@ -1,0 +1,15 @@
+R-Mes 13.2.0 static validation
+- Python syntax compile: required before release
+- app.js syntax: required before release
+- chat.js syntax: required before release
+- desktop main/preload JS syntax: required before release
+- Global websocket route: /ws/app/
+- Presence leases: 24s, heartbeat 8s, batch refresh 12s
+- Native desktop notification bridge: desktop-notification
+
+Runtime acceptance on Ubuntu:
+1. docker compose up -d --build
+2. python manage.py migrate
+3. python manage.py check
+4. two clients: blur/close one -> offline should update immediately or within ~24-36s after hard crash
+5. send message to minimized Desktop -> native Windows notification should appear immediately

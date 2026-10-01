@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main">
+  <div class="control-head"><div><h1>Forensics</h1><p>Developer-only: удалённые сообщения, скрытые сообщения и удаление чатов.</p></div><span class="developer-badge">DEVELOPER ONLY</span></div>
+  <div class="admin-warning">Оригиналы не восстанавливаются в пользовательский интерфейс автоматически. Этот экран предназначен для расследований и аудита. Открытие раздела записывается в AuditEvent.</div>
+  <form class="searchbar"><input name="q" value="{{ q }}" placeholder="Текст, email или чат"><button class="tg-button primary">Найти</button></form>
+
+  <section class="admin-panel">
+    <h2>Сообщения, удалённые у всех</h2>
+    <table class="admin-table"><thead><tr><th>ID</th><th>Когда</th><th>Отправитель</th><th>Кто удалил</th><th>Чат</th><th>Оригинал</th><th>Редакции</th></tr></thead>
+    <tbody>{% for x in deleted_rows %}<tr><td>{{ x.pk }}</td><td>{{ x.deleted_at|date:"d.m.Y H:i:s" }}</td><td>{{ x.sender.email|default:"—" }}</td><td>{{ x.deleted_by.email|default:"—" }}</td><td><a href="{% url 'control:conversation_audit' x.conversation.pk %}">{{ x.conversation.title|default:"Личный чат" }}</a></td><td class="wrap"><div class="forensic-original"><span class="forensic-tag">ORIGINAL RETAINED</span><br>{{ x.body }}</div></td><td class="wrap">{% for r in x.revisions.all %}<div>{{ r.created_at|date:"d.m H:i" }}: {{ r.old_body|truncatechars:100 }} → {{ r.new_body|truncatechars:100 }}</div>{% empty %}—{% endfor %}</td></tr>{% empty %}<tr><td colspan="7">Нет данных.</td></tr>{% endfor %}</tbody></table>
+  </section>
+
+  <section class="admin-panel">
+    <h2>Сообщения, удалённые только у себя</h2>
+    <table class="admin-table"><thead><tr><th>Когда</th><th>Пользователь</th><th>Message ID</th><th>Отправитель</th><th>Чат</th><th>Оригинал</th></tr></thead>
+    <tbody>{% for x in hidden_rows %}<tr><td>{{ x.created_at|date:"d.m.Y H:i:s" }}</td><td>{{ x.user.email }}</td><td>{{ x.message_id }}</td><td>{{ x.message.sender.email|default:"—" }}</td><td><a href="{% url 'control:conversation_audit' x.message.conversation.pk %}">{{ x.message.conversation.title|default:"Личный чат" }}</a></td><td class="wrap">{{ x.message.body }}</td></tr>{% empty %}<tr><td colspan="6">Нет данных.</td></tr>{% endfor %}</tbody></table>
+  </section>
+
+  <section class="admin-panel">
+    <h2>Удаление чатов и очистка истории</h2>
+    <table class="admin-table"><thead><tr><th>Когда</th><th>Действие</th><th>Кто</th><th>Чат</th><th>Scope</th><th>До message ID</th><th>Кого затронуло</th><th>Developer protected</th></tr></thead>
+    <tbody>{% for x in chat_deletions %}<tr><td>{{ x.created_at|date:"d.m.Y H:i:s" }}</td><td>{{ x.get_action_display }}</td><td>{{ x.actor.email|default:"—" }}</td><td><a href="{% url 'control:conversation_audit' x.conversation.pk %}">{{ x.conversation.title|default:"Личный чат" }}</a></td><td>{{ x.get_scope_display }}</td><td>{{ x.through_message_id|default:"—" }}</td><td>{{ x.affected_user_ids }}</td><td>{{ x.protected_developer_ids }}</td></tr>{% empty %}<tr><td colspan="8">Нет данных.</td></tr>{% endfor %}</tbody></table>
+  </section>
+</main></div>
+{% endblock %}

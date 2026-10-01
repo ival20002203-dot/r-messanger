@@ -1,0 +1,27 @@
+R-Mes 11.0.0 — validation
+=================================
+Python AST: OK — 112 files
+JavaScript syntax: OK — app/chat/desktop/preload/k6
+Desktop package JSON: OK
+Docker/GitLab YAML: OK
+CSS parse: OK
+Template structural balance: OK
+Migration dependency graph: OK
+
+V11 invariants:
+- version 11.0.0: OK
+- accounts 0009 appearance migration: OK
+- operations 0003 client policy migration: OK
+- personal themes/accent/background/scale/animations: OK
+- Telegram-style settings UI: OK
+- Desktop fallback treated as internal: OK
+- Desktop User-Agent/render mode: OK
+- internal navigation remains inside Electron: OK
+- web and desktop use the same backend/sync data: OK
+- user-facing ClamAV/DLP/forensic technical noise removed: OK
+- active-call REC indicator retained: OK
+- CSS parse errors: 0
+- static validation errors: 0
+
+Runtime limitation:
+The artifact environment does not contain the project's Django dependencies or Electron npm packages, so manage.py check/migrate/test and the final Windows EXE/MSI compilation were not executed here. Run doctor_windows.ps1 after Docker build on the target workstation/server.

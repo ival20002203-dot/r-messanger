@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Moderation case {{ case.pk }} — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main">
+  <div class="control-head">
+    <div>
+      <a class="back-link" href="{% url 'control:moderation_queue' %}">← Очередь moderation</a>
+      <h1 style="margin-top:10px">Moderation case</h1>
+      <p>{{ case.pk }} · {{ case.created_at|date:"d.m.Y H:i:s" }}</p>
+    </div>
+    <span class="moderation-status {{ case.status }}">{{ case.get_status_display }}</span>
+  </div>
+
+  <div class="moderation-case-layout">
+    <section class="admin-panel moderation-evidence-panel">
+      <div class="admin-section-head"><h2>Server evidence</h2><span>не захват экрана устройства</span></div>
+
+      {% if case.evidence_preview %}
+      <div class="moderation-evidence-wrap is-blurred" id="evidenceWrap">
+        <img src="{% url 'control:moderation_evidence' case.pk 'preview' %}" alt="Moderation evidence">
+        <button type="button" class="moderation-reveal" id="revealEvidence">Показать preview</button>
+      </div>
+      {% elif case.kind == "text" %}
+      <div class="moderation-text-evidence">{{ case.text_snapshot|linebreaksbr }}</div>
+      {% else %}
+      <div class="moderation-file-evidence">Для этого кейса нет графического preview.</div>
+      {% endif %}
+
+      {% if case.evidence_file %}
+      <div class="moderation-evidence-actions">
+        <a class="tg-button secondary" href="{% url 'control:moderation_evidence' case.pk 'file' %}" target="_blank">Открыть сохранённый оригинал</a> <a class="tg-button secondary" href="{% url 'control:moderation_evidence' case.pk 'file' %}?download=1">Скачать evidence</a>
+      </div>
+      {% endif %}
+
+      <div class="moderation-hash">
+        <span>SHA-256</span>
+        <code>{{ case.evidence_sha256|default:"—" }}</code>
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <h2>Контекст</h2>
+      <div class="moderation-detail-list">
+        <div><span>Отправитель</span><b>{% if case.sender %}{{ case.sender.display_name }} · {{ case.sender.email }}{% else %}—{% endif %}</b></div>
+        <div><span>@username</span><b>{% if case.sender and case.sender.handle %}@{{ case.sender.handle }}{% else %}—{% endif %}</b></div>
+        <div><span>Message ID</span><b>{{ case.message_id|default:"—" }}</b></div>
+        <div><span>Attachment ID</span><b>{{ case.attachment_id|default:"—" }}</b></div>
+        <div><span>Detector</span><b>{{ case.detector }}</b></div>
+        <div><span>Score</span><b>{{ case.score|floatformat:4 }}</b></div>
+      </div>
+
+      {% if case.conversation %}
+      <a class="tg-button secondary" href="{% url 'control:conversation_audit' case.conversation.pk %}">Открыть forensic chat</a>
+      {% endif %}
+      {% if case.sender %}
+      <a class="tg-button secondary" href="{% url 'control:user_detail' case.sender.pk %}">Открыть аккаунт</a>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="admin-grid-2">
+    <section class="admin-panel">
+      <h2>Почему сработало</h2>
+      <p class="subtle">{{ case.reason }}</p>
+      <div class="moderation-labels large">
+        {% for label in case.labels %}
+          {% if label.class %}<span>{{ label.class }} · {{ label.score|floatformat:4 }}</span>{% else %}<span>{{ label }}</span>{% endif %}
+        {% empty %}<span>нет labels</span>{% endfor %}
+      </div>
+      {% if case.text_snapshot %}
+      <h3>Текст сообщения</h3>
+      <div class="forensic-original">{{ case.text_snapshot|linebreaksbr }}</div>
+      {% endif %}
+    </section>
+
+    <section class="admin-panel moderation-decision-panel">
+      <h2>Решение</h2>
+      {% if case.reviewed_by %}
+      <div class="security-banner">
+        <svg><use href="{% static 'icons.svg' %}#shield"></use></svg>
+        <div>Последняя проверка: {{ case.reviewed_by.email }} · {{ case.reviewed_at|date:"d.m.Y H:i:s" }}{% if case.reviewer_note %}<br>{{ case.reviewer_note }}{% endif %}</div>
+      </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'control:moderation_case_action' case.pk %}" class="stack">{% csrf_token %}
+        <label>Комментарий reviewer</label>
+        <textarea name="note" rows="4" placeholder="Что именно проверено и какое решение принято">{{ case.reviewer_note }}</textarea>
+        <div class="moderation-decision-grid">
+          <button class="tg-button primary" name="action" value="confirm">Подтвердить нарушение</button>
+          <button class="tg-button secondary" name="action" value="dismiss">False positive</button>
+          <button class="tg-button secondary" name="action" value="pending">Вернуть на проверку</button>
+          {% if case.sender and not case.sender.is_developer %}
+          <button class="tg-button danger" name="action" value="suspend" onclick="return confirm('Заблокировать аккаунт {{ case.sender.email }} на платформе?')">Заблокировать аккаунт</button>
+          {% endif %}
+        </div>
+      </form>
+    </section>
+  </div>
+</main></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+  const wrap=document.querySelector("#evidenceWrap");
+  const btn=document.querySelector("#revealEvidence");
+  btn?.addEventListener("click",()=>{
+    wrap.classList.toggle("is-blurred");
+    btn.textContent=wrap.classList.contains("is-blurred")?"Показать preview":"Скрыть preview";
+  });
+});
+</script>
+{% endblock %}

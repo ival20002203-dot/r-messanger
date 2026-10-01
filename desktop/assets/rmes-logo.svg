@@ -1,0 +1,11 @@
+<svg width="320" height="88" viewBox="0 0 320 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="8" y1="4" x2="80" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8"/><stop offset="1" stop-color="#1877D2"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="80" height="80" rx="24" fill="url(#g)"/>
+  <path d="M25 25h30c11 0 18 7 18 17 0 8-5 14-13 16l14 15H59L47 60h-8v13H25V25Zm14 12v12h15c4 0 6-2 6-6s-2-6-6-6H39Z" fill="white"/>
+  <path d="M58 60h15v14L58 60Z" fill="white" opacity=".96"/>
+  <text x="102" y="57" fill="currentColor" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="42" font-weight="800" letter-spacing="-1.6">R-Mes</text>
+</svg>

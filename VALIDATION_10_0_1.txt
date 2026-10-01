@@ -1,0 +1,9 @@
+R-Mes 10.0.1 validation
+==============================
+Python AST: OK
+Desktop main.js: Node syntax OK
+Desktop package.json: OK
+Compose YAML: OK
+Desktop connection fallback: OK
+Offline Artel green: OK
+Errors: 0

@@ -1,0 +1,19 @@
+R-Mes 13.4.0 validation
+
+Static validation performed in build environment:
+- Python compileall: PASS
+- static/app.js node --check: PASS
+- static/chat.js node --check: PASS
+- desktop/main.js node --check: PASS
+- desktop/preload.js node --check: PASS
+- desktop/notification-preload.js node --check: PASS
+- docker-compose.yml YAML parse: PASS
+- docker-compose.prod.yml YAML parse: PASS
+- desktop/package.json version: 13.4.0
+- chat migration 0008_call_signal_event.py present
+- operations migration 0009_artel_link_v13_4_client_policy.py present
+- presentation preparation and health-check scripts present
+
+Runtime Django/Docker/WebRTC validation must be executed on the target Ubuntu host with:
+  bash scripts/prepare_presentation.sh
+  bash scripts/presentation_check.sh

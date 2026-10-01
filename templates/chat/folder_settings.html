@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Папки чатов — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="settings-lite-page">
+<header><a href="{% url 'chat:home' %}">← Чаты</a><div><h1>Папки чатов</h1><p>Свои рабочие вкладки поверх встроенных «Все / Личные / Группы / Каналы / Непрочитанные».</p></div></header>
+<main>
+<section class="settings-card"><h2>Новая папка</h2><form method="post" class="admin-filterbar">{% csrf_token %}<input type="hidden" name="action" value="create"><div class="admin-filter-search"><input name="name" maxlength="40" placeholder="Например: Infrastructure"></div><button class="tg-button primary">Создать</button></form></section>
+{% for f in folders %}
+<section class="settings-card folder-editor"><form method="post">{% csrf_token %}<input type="hidden" name="action" value="update"><input type="hidden" name="folder_id" value="{{ f.pk }}"><div class="folder-editor-head"><input name="name" value="{{ f.name }}" maxlength="40"><button class="tg-button primary">Сохранить</button></div><div class="folder-chat-grid">
+{% for card in cards %}<label class="folder-chat-choice"><input type="checkbox" name="conversation_ids" value="{{ card.conversation.pk }}" {% for link in f.chat_links.all %}{% if link.conversation_id == card.conversation.pk %}checked{% endif %}{% endfor %}><span>{{ card.title }}</span><small>{{ card.conversation.get_kind_display }}</small></label>{% endfor %}
+</div></form><form method="post" onsubmit="return confirm('Удалить папку?')">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="folder_id" value="{{ f.pk }}"><button class="tg-button danger">Удалить папку</button></form></section>
+{% empty %}<section class="settings-card"><div class="tg-search-empty">Создай первую пользовательскую папку.</div></section>{% endfor %}
+</main></div>
+{% endblock %}

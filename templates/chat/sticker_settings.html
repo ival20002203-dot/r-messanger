@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Стикеры — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="settings-lite-page">
+<header><a href="{% url 'chat:home' %}">← Чаты</a><div><h1>Стикеры и custom emoji</h1><p>Создавай свои корпоративные наборы. Используй только изображения, на которые у организации есть права.</p></div></header>
+<main>
+<section class="settings-card"><h2>Новый набор</h2><form method="post" class="admin-filterbar">{% csrf_token %}<input type="hidden" name="action" value="create_pack"><div class="admin-filter-search"><input name="name" maxlength="80" placeholder="Название набора"></div><button class="tg-button primary">Создать</button></form></section>
+{% for pack in packs %}<section class="settings-card"><div class="admin-section-head"><h2>{{ pack.name }}</h2><span>{{ pack.stickers.count }} элементов</span></div><form method="post" enctype="multipart/form-data" class="sticker-upload-row">{% csrf_token %}<input type="hidden" name="action" value="add_sticker"><input type="hidden" name="pack_id" value="{{ pack.pk }}"><input type="file" name="image" accept="image/png,image/webp,image/jpeg" required><input name="emoji" maxlength="16" placeholder="🙂"><input name="title" maxlength="80" placeholder="Название"><label><input type="checkbox" name="is_custom_emoji"> custom emoji</label><button class="tg-button primary">Добавить</button></form><div class="sticker-admin-grid">{% for st in pack.stickers.all %}<div class="sticker-admin-item"><img src="{{ st.image.url }}" alt=""><span>{{ st.emoji }} {{ st.title }}</span><form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_sticker"><input type="hidden" name="sticker_id" value="{{ st.pk }}"><button>×</button></form></div>{% empty %}<div class="subtle">Пустой набор.</div>{% endfor %}</div></section>{% endfor %}
+</main></div>
+{% endblock %}

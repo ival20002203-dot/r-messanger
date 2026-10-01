@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Зарезервированные имена — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main">
+
+  <section class="username-admin-hero">
+    <div>
+      <span class="username-kicker">УПРАВЛЕНИЕ ИМЕНАМИ</span>
+      <h1>Зарезервированные имена</h1>
+      <p>Защита системных имён и выдача любого зарезервированного @username выбранному пользователю. Обычный пользователь видит только сообщение «занято».</p>
+    </div>
+    <div class="username-hero-actions">
+      <a class="tg-button secondary" href="{% url 'control:reserved_usernames_catalog_txt' %}">Скачать полный список .TXT</a>
+    </div>
+  </section>
+
+  {% if request.user.is_developer %}
+  <section class="admin-panel username-assignment-panel">
+    <div class="admin-section-head"><div><h2>Выдать имя пользователю</h2><span>Доступно только разработчику. Назначение применяется сразу.</span></div><b>{{ assigned_count }} назначено</b></div>
+    <form method="post" class="admin-filterbar">{% csrf_token %}
+      <input type="hidden" name="action" value="assign">
+      <div class="admin-filter-search"><span>@</span><input name="username" required maxlength="32" placeholder="нужный_username"></div>
+      <div class="admin-filter-search"><input name="identity" required placeholder="email, @username или ID пользователя"></div>
+      <button class="tg-button primary" type="submit">Назначить</button>
+    </form>
+    {% if assigned_rows %}
+    <div class="username-table-wrap"><table class="admin-table"><thead><tr><th>Имя</th><th>Пользователь</th><th>Кто назначил</th><th>Дата</th><th></th></tr></thead><tbody>
+    {% for item in assigned_rows %}<tr><td><b>@{{ item.username }}</b></td><td>{{ item.assigned_to.display_name }}<br><small>{{ item.assigned_to.email }}</small></td><td>{{ item.assigned_by.email|default:"—" }}</td><td>{{ item.assigned_at|date:"d.m.Y H:i:s" }}</td><td><form method="post" onsubmit="return confirm('Отозвать @{{ item.username }}?')">{% csrf_token %}<input type="hidden" name="action" value="revoke_assignment"><input type="hidden" name="id" value="{{ item.pk }}"><button class="tg-button secondary">Отозвать</button></form></td></tr>{% endfor %}
+    </tbody></table></div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <div class="username-stats">
+    <div class="username-stat"><span>Каталог</span><b>{{ builtin_total }}</b><small>встроенных кандидатов</small></div>
+    <div class="username-stat protected"><span>Зарезервировано</span><b>{{ builtin_reserved }}</b><small>запрещены для новых назначений</small></div>
+    <div class="username-stat occupied"><span>Уже занято</span><b>{{ builtin_occupied }}</b><small>текущими пользователями</small></div>
+    <div class="username-stat free"><span>Свободно</span><b>{{ builtin_free }}</b><small>можно зарезервировать</small></div>
+    <div class="username-stat conflict"><span>Занято + защищено</span><b>{{ conflicts }}</b><small>пользователь сохраняет имя</small></div>
+    <div class="username-stat"><span>Мои записи</span><b>{{ custom_count }}</b><small>ручной импорт</small></div>
+  </div>
+
+  <div class="username-admin-grid">
+    <section class="admin-panel username-bulk-panel">
+      <div class="admin-section-head">
+        <div><h2>Встроенный каталог</h2><span>Выбери категории и включи резерв одним действием</span></div>
+      </div>
+
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="action" value="reserve_builtin">
+
+        <div class="username-category-grid">
+          {% for c in category_stats %}
+          <label class="username-category-card">
+            <input type="checkbox" name="categories" value="{{ c.key }}" checked>
+            <span class="username-category-check">✓</span>
+            <div>
+              <b>{{ c.label }}</b>
+              <span>{{ c.total }} имён</span>
+            </div>
+            <div class="username-category-meter">
+              <span title="Зарезервировано">{{ c.reserved }} защищено</span>
+              <span title="Занято">{{ c.occupied }} занято</span>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+
+        <div class="username-action-note">
+          <b>Безопасное поведение:</b>
+          если @username уже принадлежит сотруднику, {{ APP_NAME }} не меняет и не отбирает его. Резерв только запрещает назначить это имя кому-то другому в будущем.
+          Категории «Популярные никнеймы» и «Короткие / статусные» очень широкие — ты можешь снять с них галочки и сначала защитить только системные/официальные имена.
+        </div>
+
+        <button class="tg-button primary" type="submit">Зарезервировать выбранные категории</button>
+      </form>
+    </section>
+
+    <section class="admin-panel username-import-panel">
+      <div class="admin-section-head">
+        <div><h2>Свой список</h2><span>вставь хоть тысячи имён</span></div>
+      </div>
+
+      <form method="post" class="stack">{% csrf_token %}
+        <input type="hidden" name="action" value="import_custom">
+        <label>Категория</label>
+        <select name="category">
+          {% for value,label in category_choices %}
+          <option value="{{ value }}" {% if value == "custom" %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+
+        <label>Список @username</label>
+        <textarea name="usernames" rows="9" placeholder="@admin&#10;@support&#10;@boss&#10;@king&#10;@company_news&#10;&#10;Можно разделять переносом строки, пробелом, запятой или ;"></textarea>
+
+        <label>Комментарий</label>
+        <input name="note" maxlength="255" placeholder="Например: резерв IT / бренд / руководство">
+
+        <button class="tg-button primary">Импортировать и включить резерв</button>
+      </form>
+    </section>
+  </div>
+
+  <section class="admin-panel username-registry">
+    <div class="username-registry-head">
+      <div>
+        <h2>Каталог и состояние имён</h2>
+        <p>Зелёный — свободно, синий — зарезервировано, оранжевый — уже занято сотрудником.</p>
+      </div>
+      <span>{{ page_obj.paginator.count }} результатов</span>
+    </div>
+
+    <form class="admin-filterbar username-filterbar">
+      <div class="admin-filter-search">
+        <span>@</span>
+        <input name="q" value="{{ q }}" placeholder="username, пользователь, email или заметка">
+      </div>
+
+      <select name="category">
+        <option value="">Все категории</option>
+        {% for value,label in category_choices %}
+        <option value="{{ value }}" {% if category_filter == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="state">
+        <option value="">Все состояния</option>
+        <option value="free" {% if state_filter == "free" %}selected{% endif %}>Свободно</option>
+        <option value="reserved" {% if state_filter == "reserved" %}selected{% endif %}>Зарезервировано</option>
+        <option value="occupied" {% if state_filter == "occupied" %}selected{% endif %}>Занято пользователем</option>
+        <option value="inactive" {% if state_filter == "inactive" %}selected{% endif %}>Резерв выключен</option>
+      </select>
+
+      <button class="tg-button primary">Фильтр</button>
+      {% if q or category_filter or state_filter %}
+      <a class="tg-button secondary" href="{% url 'control:reserved_usernames' %}">Сбросить</a>
+      {% endif %}
+    </form>
+
+    <div class="username-table-wrap">
+      <table class="admin-table username-table">
+        <thead>
+          <tr>
+            <th>@username</th>
+            <th>Категория</th>
+            <th>Состояние</th>
+            <th>Кем занят</th>
+            <th>Резерв</th>
+            <th>Источник</th>
+            <th>Комментарий</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>
+              <div class="username-name">
+                <span>@</span><b>{{ row.username }}</b>
+              </div>
+            </td>
+            <td><span class="username-category-badge">{{ row.category_label }}</span></td>
+            <td>
+              {% if row.state == "occupied" %}
+                <span class="username-state occupied">ЗАНЯТО</span>
+              {% elif row.state == "reserved" %}
+                <span class="username-state reserved">ЗАРЕЗЕРВИРОВАНО</span>
+              {% elif row.state == "inactive" %}
+                <span class="username-state inactive">РЕЗЕРВ OFF</span>
+              {% else %}
+                <span class="username-state free">СВОБОДНО</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if row.occupant %}
+                <a class="username-occupant" href="{% url 'control:user_detail' row.occupant.pk %}">
+                  <b>{{ row.occupant.display_name }}</b>
+                  <span>{{ row.occupant.email }}</span>
+                </a>
+              {% else %}
+                <span class="subtle">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if row.is_reserved %}
+                <span class="username-protect-badge">🔒 ВКЛ.</span>
+                {% if row.reservation.assigned_to %}<span class="username-conflict-badge">НАЗНАЧЕНО РАЗРАБОТЧИКОМ</span>{% elif row.occupant %}<span class="username-conflict-badge">ТЕКУЩИЙ ВЛАДЕЛЕЦ СОХРАНЁН</span>{% endif %}
+              {% else %}
+                <span class="subtle">ВЫКЛ.</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if row.source == "builtin" %}<span class="source-badge builtin">ВСТРОЕННЫЙ</span>{% else %}<span class="source-badge custom">РУЧНОЙ</span>{% endif %}
+            </td>
+            <td class="wrap">{{ row.reservation.note|default:"—" }}</td>
+            <td>
+              <div class="username-row-actions">
+                {% if row.reservation %}
+                  <form method="post">{% csrf_token %}
+                    <input type="hidden" name="action" value="toggle">
+                    <input type="hidden" name="id" value="{{ row.reservation.pk }}">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button class="tg-button {% if row.reservation.active %}secondary{% else %}primary{% endif %}">
+                      {% if row.reservation.active %}Выключить{% else %}Включить{% endif %}
+                    </button>
+                  </form>
+                  {% if row.reservation.source == "custom" %}
+                  <form method="post" onsubmit="return confirm('Удалить @{{ row.username }} из пользовательского резерва?')">{% csrf_token %}
+                    <input type="hidden" name="action" value="delete_custom">
+                    <input type="hidden" name="id" value="{{ row.reservation.pk }}">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button class="tg-icon-btn danger-item" title="Удалить пользовательскую запись">×</button>
+                  </form>
+                  {% endif %}
+                {% else %}
+                  <form method="post">{% csrf_token %}
+                    <input type="hidden" name="action" value="reserve_one">
+                    <input type="hidden" name="username" value="{{ row.username }}">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button class="tg-button primary">Защитить</button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8"><div class="tg-search-empty">По этому фильтру ничего нет.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="username-pagination">
+      <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      <div>
+        {% if page_obj.has_previous %}
+        <a class="tg-button secondary" href="?q={{ q }}&category={{ category_filter }}&state={{ state_filter }}&page={{ page_obj.previous_page_number }}">← Назад</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a class="tg-button secondary" href="?q={{ q }}&category={{ category_filter }}&state={{ state_filter }}&page={{ page_obj.next_page_number }}">Дальше →</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+</main></div>
+{% endblock %}

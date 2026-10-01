@@ -1,0 +1,14 @@
+R-Mes 13.8.0 validation
+===========================
+
+PASS  Django system check
+PASS  32 Django tests
+PASS  New v13.8 protected-delete tests
+PASS  Reserved username assign/revoke and privacy tests
+PASS  Immediate moderation queue and strict threshold tests
+PASS  Call ICE fallback idempotency test
+PASS  JavaScript syntax: app.js, chat.js, desktop main/preload
+PASS  Shell syntax: release_13_8.sh
+PASS  Database migrations apply on a clean test database
+
+Validated: 2026-09-09

@@ -1,0 +1,26 @@
+R-Mes 13.5.0 validation
+
+Static validation performed in build environment:
+- Python compileall (apps + localgram): PASS
+- static/app.js node --check: PASS
+- static/chat.js node --check: PASS
+- desktop/main.js node --check: PASS
+- desktop/preload.js node --check: PASS
+- desktop/notification-preload.js node --check: PASS
+- docker-compose.yml YAML parse: PASS
+- docker-compose.prod.yml YAML parse: PASS
+- desktop/package.json JSON parse: PASS
+- shell scripts bash -n: PASS
+- VERSION: 13.5.0
+- desktop package version: 13.5.0
+- operations migration 0010_artel_link_v13_5_client_policy.py present
+
+Functional changes validated statically:
+- attachment upload is optimistic and uses XMLHttpRequest progress
+- attachment retries are idempotent by client_message_id
+- file/photo filename is no longer duplicated as message body
+- pending attachments render compact Telegram-style state
+- server-local Asia/Tashkent HH:MM is included in realtime/sidebar payloads
+- attachment menu provides Photo/Video and File actions
+
+Runtime Django/Docker/MinIO/ClamAV validation must be executed on the target Ubuntu host.

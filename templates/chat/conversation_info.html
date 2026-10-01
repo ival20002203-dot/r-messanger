@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Настройки чата — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="info-page">
+<header class="info-top">
+  <a href="{% url 'chat:conversation' conversation.pk %}" class="tg-icon-btn"><svg><use href="{% static 'icons.svg' %}#back"></use></svg></a>
+  <div><h1>Настройки чата</h1><span class="subtle">{{ conversation.get_kind_display }}</span></div>
+</header>
+
+<div class="info-grid">
+  <div>
+    <section class="settings-card chat-settings-card">
+      <div class="tg-info-profile">
+        <div class="tg-avatar tg-info-avatar">
+          {% if peer and peer.avatar_url %}<img src="{{ peer.avatar_url }}" alt="">{% else %}<span>{{ conversation.title|default:"Ч"|slice:":1"|upper }}</span>{% endif %}
+        </div>
+        <h2>{% if peer %}{{ peer.display_name }}{% else %}{{ conversation.title|default:"Без названия" }}{% endif %}</h2>
+        {% if peer and peer.handle %}<div class="tg-handle">@{{ peer.handle }}</div>{% endif %}
+        <div class="tg-info-status">{% if peer %}{{ peer_presence }}{% else %}{{ members|length }} участников{% endif %}</div>
+      </div>
+
+      {% if peer and peer.bio %}
+      <div class="tg-info-section"><label>О себе</label><p>{{ peer.bio }}</p></div>
+      {% elif conversation.description %}
+      <div class="tg-info-section"><label>Описание</label><p>{{ conversation.description }}</p></div>
+      {% endif %}
+
+      {% if peer %}
+      <div class="tg-info-section">
+        <a class="tg-info-row" href="mailto:{{ peer.email }}">
+          <svg><use href="{% static 'icons.svg' %}#user"></use></svg>
+          <div><b>{{ peer.email }}</b><span>Корпоративная почта</span></div>
+        </a>
+        {% if blocked_by_me %}
+        <button class="tg-info-row action-row" data-user-action="unblock" data-user-id="{{ peer.pk }}"><svg><use href="{% static 'icons.svg' %}#check"></use></svg><div><b>Разблокировать</b><span>Снова разрешить общение</span></div></button>
+        {% else %}
+        <button class="tg-info-row action-row danger-row" data-user-action="block" data-user-id="{{ peer.pk }}"><svg><use href="{% static 'icons.svg' %}#block"></use></svg><div><b>Заблокировать</b><span>Запретить личные сообщения и звонки</span></div></button>
+        {% endif %}
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="settings-card chat-settings-card">
+      <h2>Мои настройки этого чата</h2>
+      <p class="subtle">Эти параметры меняют только ваш интерфейс и уведомления для этого диалога.</p>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="personal_settings">
+
+        <div class="chat-setting-group">
+          <span class="chat-setting-title">Цвет сообщений</span>
+          <div class="chat-theme-grid">
+            {% for value,label in member.ChatTheme.choices %}
+            <label class="theme-option">
+              <input type="radio" name="chat_theme" value="{{ value }}" {% if member.chat_theme == value %}checked{% endif %}>
+              <span class="theme-card"><i class="theme-dot {{ value }}"></i><span>{{ label }}</span></span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="chat-setting-group">
+          <span class="chat-setting-title">Фон переписки</span>
+          <div class="chat-bg-grid">
+            {% for value,label in member.BackgroundStyle.choices %}
+            <label class="bg-option">
+              <input type="radio" name="background_style" value="{{ value }}" {% if member.background_style == value %}checked{% endif %}>
+              <span class="bg-card"><i class="bg-preview {{ value }}"></i><span>{{ label }}</span></span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="chat-setting-group">
+          <label class="preference-row"><div><b>Уведомления</b><span>Получать уведомления именно из этого чата</span></div><input type="checkbox" name="notifications_enabled" {% if member.notifications_enabled %}checked{% endif %}></label>
+          <label class="preference-row"><div><b>Предпросмотр медиа</b><span>Показывать фото прямо внутри переписки</span></div><input type="checkbox" name="media_previews" {% if member.media_previews %}checked{% endif %}></label>
+        </div>
+
+        <button class="tg-button primary" style="margin-top:14px">Сохранить мои настройки</button>
+      </form>
+    </section>
+
+    {% if admin and conversation.kind != "direct" %}
+    <section class="settings-card">
+      <h2>Управление группой / каналом</h2>
+      <form method="post" class="stack">{% csrf_token %}<input type="hidden" name="action" value="settings">
+        <label>Название</label><input name="title" value="{{ conversation.title }}">
+        <label>Описание</label><textarea name="description" rows="4">{{ conversation.description }}</textarea>
+        <label class="switch-line"><input type="checkbox" name="only_admins_can_invite" {% if conversation.only_admins_can_invite %}checked{% endif %}> Только администраторы приглашают участников</label>
+        <label class="switch-line"><input type="checkbox" name="only_admins_can_pin" {% if conversation.only_admins_can_pin %}checked{% endif %}> Только администраторы закрепляют сообщения</label>
+        <button class="tg-button primary">Сохранить настройки группы</button>
+      </form>
+    </section>
+    {% endif %}
+  </div>
+
+  <div>
+    <section class="settings-card">
+      <div class="admin-section-head"><h2>Участники · {{ members|length }}</h2>{% if conversation.kind != "direct" %}<span>Роли и доступы</span>{% endif %}</div>
+      {% if conversation.kind != "direct" %}
+      <form method="post" class="add-member-form">{% csrf_token %}<input type="hidden" name="action" value="add_member"><input name="email" type="email" placeholder="user@company.com или @username"><button class="tg-button primary">Добавить</button></form>
+      {% endif %}
+      <div class="member-list">
+        {% for x in members %}
+        <div class="member-row">
+          <div class="tg-avatar tg-avatar-sm">{% if x.user.avatar_url %}<img src="{{ x.user.avatar_url }}" alt="">{% else %}<span>{{ x.user.initials }}</span>{% endif %}</div>
+          <div class="person-data">
+            <b>{{ x.user.display_name }} {% if x.user.is_online %}{% if user.is_developer or x.user.role != "developer" and x.user.role != "superadmin" %}<i class="online-dot-inline"></i>{% endif %}{% endif %}</b>
+            <span>{% if x.user.handle %}@{{ x.user.handle }} · {% endif %}{{ x.user.email }}</span>
+          </div>
+          <span class="role-badge">{{ x.get_role_display }}</span>
+
+          {% if admin and x.user_id != user.id and conversation.kind != "direct" %}
+          <form method="post" class="member-actions">{% csrf_token %}<input type="hidden" name="action" value="member_role"><input type="hidden" name="member_id" value="{{ x.pk }}">
+            <select name="role" onchange="this.form.submit()"><option value="member" {% if x.role == "member" %}selected{% endif %}>Участник</option><option value="admin" {% if x.role == "admin" %}selected{% endif %}>Администратор</option></select>
+          </form>
+          <form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove_member"><input type="hidden" name="member_id" value="{{ x.pk }}"><button class="tg-icon-btn danger-item" title="Удалить участника">×</button></form>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="settings-card">
+      <h2>Быстрые действия</h2>
+      <div class="preference-list">
+        <a href="{% url 'chat:conversation' conversation.pk %}" class="preference-row"><div><b>Вернуться к сообщениям</b><span>Esc внутри чата делает то же самое</span></div><span>→</span></a>
+        {% if user.is_developer %}
+        <a href="{% url 'control:conversation_audit' conversation.pk %}" class="preference-row"><div><b>Developer forensic view</b><span>Сохранённые оригиналы и история удаления</span></div><span class="developer-badge">DEV</span></a>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{% if peer %}
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+  document.querySelectorAll("[data-user-action]").forEach(b=>b.addEventListener("click",async()=>{
+    const path=b.dataset.userAction==="block"?`/u/${b.dataset.userId}/block/`:`/u/${b.dataset.userId}/unblock/`;
+    try{await RMesUI.post(path);location.reload()}catch(e){RMesUI.toast(e.message,"error")}
+  }));
+});
+</script>
+{% endif %}
+{% endblock %}

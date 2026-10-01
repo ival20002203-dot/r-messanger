@@ -1,0 +1,14 @@
+.git
+.venv
+__pycache__
+*.pyc
+.env
+media
+logs
+backups
+staticfiles
+.vscode
+.idea
+client_updates
+mobile/android/.gradle
+mobile/android/app/build

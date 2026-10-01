@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Preview · {{ attachment.original_name }} — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="preview-page">
+  <header class="preview-head"><div><a class="back-link" href="{% url 'chat:conversation' attachment.message.conversation_id %}">← Назад в чат</a><h1>{{ attachment.original_name }}</h1><span>{{ attachment.size|filesizeformat }} · {{ attachment.content_type|default:"file" }} · SHA-256 {{ attachment.sha256|slice:":16" }}…</span></div>{% if attachment.scan_status != "infected" %}<a class="tg-button primary" href="{{ download_url }}">Скачать оригинал</a>{% endif %}</header>
+  <main class="preview-surface preview-{{ preview.kind }}">
+    {% if preview.kind == "image" %}<img class="preview-image" src="{{ preview.url }}" alt="">
+    {% elif preview.kind == "video" %}<video class="preview-video" src="{{ preview.url }}" controls></video>
+    {% elif preview.kind == "audio" %}<audio src="{{ preview.url }}" controls></audio>
+    {% elif preview.kind == "pdf" %}{% for page in preview.pages %}<section class="preview-page-card"><b>Страница {{ page.number }}</b><pre>{{ page.text }}</pre></section>{% empty %}<div class="tg-search-empty">В PDF нет извлекаемого текста. Открой оригинал.</div>{% endfor %}
+    {% elif preview.kind == "spreadsheet" %}{% for sheet in preview.sheets %}<section class="preview-sheet"><h2>{{ sheet.name }}</h2><div class="preview-table-wrap"><table>{% for row in sheet.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</table></div></section>{% endfor %}
+    {% elif preview.kind == "presentation" %}{% for slide in preview.slides %}<section class="preview-slide"><b>Слайд {{ slide.number }}</b><pre>{{ slide.text }}</pre></section>{% endfor %}
+    {% elif preview.kind == "text" or preview.kind == "document" %}<pre class="preview-text">{{ preview.text }}</pre>
+    {% else %}<div class="preview-message"><h2>{{ preview.title }}</h2><p>{{ preview.text }}</p>{% if preview.url %}<a class="tg-button primary" href="{{ preview.url }}">Скачать</a>{% endif %}</div>{% endif %}
+  </main>
+</div>
+{% endblock %}

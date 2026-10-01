@@ -1,0 +1,15 @@
+R-Mes 13.1.0 validation
+===============================
+- Python sources parsed successfully with ast.
+- static/app.js syntax checked with Node.
+- static/chat.js syntax checked with Node.
+- desktop/main.js syntax checked with Node.
+- accounts migration 0011 adds Telegram-style notification preferences.
+- operations migration 0006 updates Windows client policy to 13.1.0.
+- update UI distinguishes missing installer from a ready update and polls readiness every 10 seconds.
+- no runtime .env, signing key, or keystore.properties is included.
+
+Run on the deployment host after replacing the project:
+  docker compose up -d --build
+  docker compose exec web python manage.py migrate
+  docker compose exec web python manage.py check

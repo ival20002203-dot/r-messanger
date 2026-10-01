@@ -1,0 +1,13 @@
+R-Mes 429/session-expiry hotfix
+
+Replace only these files in your project:
+1) apps\operations\middleware.py
+2) static\app.js
+
+Then stop the dev server with Ctrl+C and run:
+  .\scripts\run_dev_vscode.ps1
+
+What this fixes:
+- GET /auth/login/ is no longer counted as a login attempt.
+- Expired authenticated pages stop background polling and redirect once to login.
+- No more 302 -> /auth/login/ loop generating 429 JSON in the browser.

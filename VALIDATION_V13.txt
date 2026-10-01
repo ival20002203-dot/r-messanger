@@ -1,0 +1,21 @@
+R-Mes 13.0.0 validation
+============================
+
+Validated in artifact environment:
+- Python source compile: PASS (`python3 -m compileall -q apps localgram`)
+- static/chat.js syntax: PASS (`node --check`)
+- static/app.js syntax: PASS (`node --check`)
+- desktop/main.js syntax: PASS (`node --check`)
+- desktop/preload.js syntax: PASS (`node --check`)
+- app lock control is present in templates/chat/shell.html
+- avatar authenticated route is present
+- presence API route is present
+- native update download route is present
+- operations migration 0005_artel_link_v13_client_policy is present
+- Docker web service bind-mounts ./client_updates read-only
+
+Not executable in this artifact environment:
+- Django system check/migrations against a running PostgreSQL/Redis stack: Docker/Django runtime not installed here.
+- Android APK compilation: Android SDK/build-tools are not installed in this artifact environment.
+
+The Android project is complete under mobile/android and includes Windows/Linux build scripts. A release signing key is intentionally NOT embedded in the archive; create it once and preserve it for future in-place Android updates.

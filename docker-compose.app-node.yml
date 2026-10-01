@@ -1,0 +1,82 @@
+services:
+  pgbouncer:
+    build:
+      context: .
+      dockerfile: Dockerfile.pgbouncer
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PGBOUNCER_DB_HOST: ${POSTGRES_HA_HOST}
+      PGBOUNCER_DB_PORT: ${POSTGRES_HA_PORT:-5432}
+
+  clamav:
+    image: clamav/clamav:stable
+    restart: unless-stopped
+    volumes:
+      - node_clamav:/var/lib/clamav
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SKIP_STARTUP_MIGRATIONS: "1"
+      POSTGRES_HOST: pgbouncer
+      POSTGRES_PORT: "6432"
+      DB_CONN_MAX_AGE: "0"
+      CLAMAV_HOST: clamav
+    depends_on: [pgbouncer,clamav]
+    ports:
+      - "${APP_NODE_PORT:-8080}:8000"
+    volumes:
+      - ${PRIVATE_MEDIA_HOST_PATH:-./private_media}:/app/private_media
+      - ./logs:/app/logs
+    command: ["daphne","-b","0.0.0.0","-p","8000","localgram.asgi:application"]
+
+  moderator:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SKIP_STARTUP_MIGRATIONS: "1"
+      POSTGRES_HOST: pgbouncer
+      POSTGRES_PORT: "6432"
+      DB_CONN_MAX_AGE: "0"
+    depends_on: [web]
+    volumes:
+      - ${PRIVATE_MEDIA_HOST_PATH:-./private_media}:/app/private_media
+      - ./logs:/app/logs
+    command: ["python","manage.py","run_moderation_worker"]
+
+  securityworker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SKIP_STARTUP_MIGRATIONS: "1"
+      POSTGRES_HOST: pgbouncer
+      POSTGRES_PORT: "6432"
+      DB_CONN_MAX_AGE: "0"
+      CLAMAV_HOST: clamav
+    depends_on: [web,clamav]
+    volumes:
+      - ${PRIVATE_MEDIA_HOST_PATH:-./private_media}:/app/private_media
+      - ./logs:/app/logs
+    command: ["python","manage.py","run_security_worker"]
+
+  scheduler:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SKIP_STARTUP_MIGRATIONS: "1"
+      POSTGRES_HOST: pgbouncer
+      POSTGRES_PORT: "6432"
+      DB_CONN_MAX_AGE: "0"
+    depends_on: [web]
+    volumes:
+      - ./logs:/app/logs
+    command: ["python","manage.py","run_scheduled_posts"]
+
+volumes:
+  node_clamav:

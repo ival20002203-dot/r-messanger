@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main"><div class="control-head"><div><h1>Корпоративные домены</h1><p>Только эти домены могут проходить регистрацию.</p></div></div>
+<section class="admin-panel"><h2>Добавить домен</h2><form method="post" class="stack">{% csrf_token %}{{ form.as_p }}<button class="button primary">Добавить</button></form></section>
+<section class="admin-panel"><table class="admin-table"><thead><tr><th>Домен</th><th>Активен</th><th>Регистрация</th><th></th></tr></thead><tbody>
+{% for x in rows %}<tr><td>{{ x.domain }}</td><td>{{ x.active }}</td><td>{{ x.registration_enabled }}</td><td><form method="post" action="{% url 'control:domain_delete' x.pk %}">{% csrf_token %}<button class="button danger small">Удалить</button></form></td></tr>{% endfor %}
+</tbody></table></section></main></div>
+{% endblock %}

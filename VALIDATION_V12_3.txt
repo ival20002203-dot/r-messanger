@@ -1,0 +1,7 @@
+R-Mes 12.3.0 validation
+- Registration page has a back arrow to login.
+- Registration verification has a back arrow to edit registration.
+- Edit registration restores pending email/display name.
+- Password is never restored from the password hash/session.
+- Login verification has a back arrow to login.
+- No database migration required.

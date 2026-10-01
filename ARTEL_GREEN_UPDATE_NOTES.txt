@@ -1,0 +1,25 @@
+R-Mes v9 — UI / settings / media update
+
+Included changes:
+1. User settings page redesigned in a Telegram-style layout:
+   - cleaner left navigation with icons
+   - clearer grouped sections
+   - better spacing, card hierarchy and autosave presentation
+   - reduced unnecessary modal interruptions
+2. Brand color updated from red to green across the main web UI.
+3. Chat layout refined:
+   - right-side info panel collapsed by default
+   - added quick toggle button for info panel in the chat header
+   - removed excess empty visual space on the main screen
+4. Voice messages improved:
+   - voice messages are now sent and playable immediately
+   - audio can be previewed while background security scan continues
+   - voice messages bypass the extra moderation queue that blocked sending
+5. Calls improved:
+   - audio/video call connection uses STUN fallback
+   - browser-side compliance recording added for active calls
+   - completed call recordings are uploaded back into the chat automatically
+6. Minor green-brand polish for desktop/offline assets and theme color.
+
+Important note:
+- Call recording in this build is client/browser-side. The active client records the call media stream and uploads the recording into the chat when the call ends.

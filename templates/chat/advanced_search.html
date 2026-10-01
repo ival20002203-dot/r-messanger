@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load tz %}
+{% load static %}
+{% block title %}Расширенный поиск — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="search-pro-page">
+  <header class="search-pro-head"><a class="tg-icon-btn" href="{% url 'chat:home' %}">←</a><div><h1>Поиск по {{ APP_NAME }}</h1><p>Текст + фильтры по человеку, дате и типу контента.</p></div></header>
+  <main class="search-pro-main">
+    <form class="search-pro-box">
+      <svg><use href="{% static 'icons.svg' %}#search"></use></svg>
+      <input name="q" value="{{ q }}" placeholder='Например: отчет from:@rauf after:2026-08-01 has:file' autofocus>
+      <button class="tg-button primary">Найти</button>
+    </form>
+    <div class="search-syntax">
+      <code>from:@username</code><code>after:2026-08-01</code><code>before:2026-08-19</code><code>has:file</code><code>has:image</code><code>has:voice</code><code>has:link</code>
+    </div>
+    {% if q %}<div class="search-pro-count">Найдено: {{ rows|length }}{% if rows|length >= 150 %}+{% endif %}</div>{% endif %}
+    <section class="search-pro-results">
+      {% for m in rows %}
+      <a class="search-pro-result" href="{% url 'chat:conversation' m.conversation.pk %}?jump={{ m.pk }}#msg-{{ m.pk }}">
+        <div class="tg-avatar tg-avatar-sm">{% if m.sender and m.sender.avatar_url %}<img src="{{ m.sender.avatar_url }}" alt="">{% else %}<span>{% if m.sender %}{{ m.sender.initials }}{% else %}?{% endif %}</span>{% endif %}</div>
+        <div class="search-pro-copy"><div><b>{{ m.conversation.title|default:m.conversation.get_kind_display }}</b><time datetime="{{ m.created_at|localtime|date:'c' }}">{{ m.created_at|localtime|date:"d.m.Y H:i" }}</time></div><span>{% if m.sender %}{{ m.sender.display_name }}{% endif %}{% if m.sender.handle %} · @{{ m.sender.handle }}{% endif %}</span><p>{{ m.body|truncatechars:300 }}</p></div>
+      </a>
+      {% empty %}{% if q %}<div class="tg-search-empty">Ничего не найдено. Попробуйте убрать часть фильтров.</div>{% endif %}{% endfor %}
+    </section>
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'control/base.html' %}
+{% load static %}
+{% block control_content %}
+<div class="control-page-head">
+  <div><span class="eyebrow">R-Messanger Calls</span><h1>Журнал звонков</h1><p>Записи звонков хранятся только в панели разработчика и не появляются в чатах.</p></div>
+  <div class="control-head-pills"><span class="status-pill ok">ADMIN ONLY</span></div>
+</div>
+<form class="control-filters" method="get">
+  <input name="q" value="{{ q }}" placeholder="Имя, e-mail или call id">
+  <select name="status"><option value="">Все статусы</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+  <button class="tg-button primary" type="submit">Фильтр</button>
+</form>
+<div class="call-admin-grid">
+{% for row in rows %}
+  <article class="call-admin-card">
+    <div class="call-admin-top"><div><b>{{ row.caller|default:'—' }}</b><span>→ {{ row.callee|default:'—' }}</span></div><span class="call-status {{ row.status }}">{{ row.get_status_display }}</span></div>
+    <div class="call-admin-meta"><span>{{ row.started_at|date:'d.m.Y H:i:s' }}</span><span>{{ row.duration_seconds }} сек.</span><code>{{ row.call_id }}</code></div>
+    {% if row.end_reason %}<div class="call-admin-reason">Причина: {{ row.end_reason }}</div>{% endif %}
+    {% if row.recording %}
+      <audio controls preload="none" src="{% url 'control:call_recording_content' row.pk %}"></audio>
+      <div class="call-admin-hash">{{ row.recording_size|filesizeformat }} · SHA256 {{ row.recording_sha256|slice:':16' }}…</div>
+    {% else %}<div class="call-admin-empty">Запись ещё не загружена</div>{% endif %}
+  </article>
+{% empty %}<div class="tg-search-empty">Звонков пока нет.</div>{% endfor %}
+</div>
+{% if page_obj.has_other_pages %}<div class="pagination-row">{% if page_obj.has_previous %}<a class="tg-button secondary" href="?q={{ q|urlencode }}&status={{ status_filter|urlencode }}&page={{ page_obj.previous_page_number }}">←</a>{% endif %}<span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a class="tg-button secondary" href="?q={{ q|urlencode }}&status={{ status_filter|urlencode }}&page={{ page_obj.next_page_number }}">→</a>{% endif %}</div>{% endif %}
+{% endblock %}

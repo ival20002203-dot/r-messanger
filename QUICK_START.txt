@@ -1,0 +1,36 @@
+R-Mes 15.0.0 — быстрый запуск
+
+ЛОКАЛЬНО (VS Code / Windows)
+1) Открой корень проекта в VS Code.
+2) PowerShell:
+
+   Set-ExecutionPolicy -Scope Process Bypass
+   .\scripts\run_dev_vscode.ps1
+
+3) Открой http://127.0.0.1:8000
+
+DEV вход:
+   developer@rmes.local
+   RMesLocal-2026-Dev!
+
+PUBLIC TEST ДЛЯ ТЕЛЕФОНОВ
+1) Подними Ubuntu VPS.
+2) Скопируй проект на VPS.
+3) Если IP сервера, например, 203.0.113.10:
+
+   sudo ./scripts/prepare_public_vps.sh "203.0.113.10.nip.io" "203.0.113.10" "you@example.com"
+
+4) На Windows перед сборкой клиентов:
+
+   .\scripts\configure_clients.ps1 -ServerUrl "https://203.0.113.10.nip.io"
+   .\scripts\build_clients_windows.ps1 -ServerUrl "https://203.0.113.10.nip.io"
+
+Android: release APK/AAB появятся в mobile\android\ (RMes-15.0.0.apk / .aab).
+iPhone: mobile\ios\RMesIOS.xcodeproj -> Xcode -> Signing Team -> Archive/TestFlight.
+Windows: desktop\dist.
+
+Важно:
+- Для настоящих push нужны Firebase (Android) и APNs/Apple Developer (iPhone) ключи.
+- Для iPhone подписанный IPA/TestFlight требует macOS + Xcode + Apple Developer Team.
+- Звонки сохраняются НЕ в чат, а только в Developer -> /control/calls/.
+- 18+ worker в локальном DEV запускается автоматически.

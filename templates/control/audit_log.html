@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Audit 2.0 — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main">
+  <section class="admin-hero">
+    <div><h1>Audit 2.0</h1><p>Поиск и расследование административных, пользовательских, security и forensic действий.</p></div>
+    <a class="tg-button secondary" href="{% url 'control:audit_export' %}?q={{ q|urlencode }}&category={{ category_filter|urlencode }}&actor={{ actor_filter|urlencode }}&object_type={{ object_filter|urlencode }}&ip={{ ip_filter|urlencode }}&from={{ date_from|urlencode }}&to={{ date_to|urlencode }}">CSV export</a>
+  </section>
+
+  <form class="audit-filter-grid">
+    <input name="q" value="{{ q }}" placeholder="Действие, ID, email, @username…">
+    <select name="category"><option value="">Все категории</option>{% for key,label in categories %}<option value="{{ key }}" {% if category_filter == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    <input name="actor" value="{{ actor_filter }}" placeholder="Actor / @username">
+    <select name="object_type"><option value="">Все объекты</option>{% for value in object_types %}<option value="{{ value }}" {% if object_filter == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select>
+    <input name="ip" value="{{ ip_filter }}" placeholder="IP">
+    <input type="date" name="from" value="{{ date_from }}">
+    <input type="date" name="to" value="{{ date_to }}">
+    <button class="tg-button primary">Применить</button>
+    {% if q or category_filter or actor_filter or object_filter or ip_filter or date_from or date_to %}<a class="tg-button secondary" href="{% url 'control:audit_log' %}">Сбросить</a>{% endif %}
+  </form>
+
+  <div class="audit-timeline">
+    {% for row in rows %}
+    <article class="audit-event-card audit-cat-{{ row.category }}">
+      <div class="audit-event-rail"><i></i></div>
+      <div class="audit-event-main">
+        <div class="audit-event-head">
+          <div>
+            <span class="audit-category">{{ row.category_label }}</span>
+            <h3>{{ row.title }}</h3>
+          </div>
+          <time>{{ row.event.created_at|date:"d.m.Y H:i:s" }}</time>
+        </div>
+        <div class="audit-event-meta">
+          <span><b>Actor</b> {{ row.event.actor.email|default:"system" }}</span>
+          <span><b>IP</b> {{ row.event.ip_address|default:"—" }}</span>
+          <span><b>Object</b> {{ row.event.object_type|default:"—" }} {{ row.event.object_id }}</span>
+          <span><b>Action</b> <code>{{ row.event.action }}</code></span>
+        </div>
+        {% if row.event.metadata %}
+        <details class="audit-details"><summary>Технические данные</summary><pre>{{ row.metadata_pretty }}</pre></details>
+        {% endif %}
+      </div>
+    </article>
+    {% empty %}<div class="tg-search-empty">По выбранным условиям событий нет.</div>{% endfor %}
+  </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div class="username-pagination">
+    <span>Страница {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    <div>
+      {% if page_obj.has_previous %}<a class="tg-button secondary" href="?q={{ q|urlencode }}&category={{ category_filter }}&actor={{ actor_filter|urlencode }}&object_type={{ object_filter|urlencode }}&ip={{ ip_filter|urlencode }}&from={{ date_from }}&to={{ date_to }}&page={{ page_obj.previous_page_number }}">← Назад</a>{% endif %}
+      {% if page_obj.has_next %}<a class="tg-button secondary" href="?q={{ q|urlencode }}&category={{ category_filter }}&actor={{ actor_filter|urlencode }}&object_type={{ object_filter|urlencode }}&ip={{ ip_filter|urlencode }}&from={{ date_from }}&to={{ date_to }}&page={{ page_obj.next_page_number }}">Дальше →</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</main></div>
+{% endblock %}

@@ -1,0 +1,82 @@
+{
+  "name": "r-mes-desktop",
+  "version": "15.1.2",
+  "description": "R-Messanger Desktop client",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win nsis",
+    "dist:mac": "electron-builder --mac dmg",
+    "dist:linux": "electron-builder --linux AppImage",
+    "dist:gpo": "electron-builder --win msi"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "uz.rmes.desktop",
+    "productName": "R-Messanger",
+    "asar": true,
+    "files": [
+      "main.js",
+      "preload.js",
+      "offline.html",
+      "notification.html",
+      "notification-preload.js",
+      "assets/**/*",
+      "package.json"
+    ],
+    "protocols": [
+      {
+        "name": "R-Messanger",
+        "schemes": [
+          "rmes"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "RMes-${version}-Setup.${ext}",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Network",
+      "icon": "assets/icon.png"
+    },
+    "artifactName": "RMes-${version}-Setup.${ext}",
+    "msi": {
+      "oneClick": true,
+      "perMachine": true,
+      "runAfterFinish": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "upgradeCode": "7A0D4B7A-8DEB-41D9-8DE0-3F16A7A83D19"
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  }
+}

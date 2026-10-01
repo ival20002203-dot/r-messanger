@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Контроль 18+ — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main">
+  <section class="admin-hero moderation-hero">
+    <div>
+      <h1>Контроль 18+ контента</h1>
+      <p>Серверная очередь проверки. Новое фото или видео появляется здесь сразу после отправки, а обнаруженное нарушение сохраняется с доказательством.</p>
+    </div>
+    <div class="developer-badge">ТОЛЬКО РАЗРАБОТЧИК</div>
+  </section>
+
+  <div class="stats-grid moderation-stats">
+    <div class="stat-card"><span>На проверке</span><b id="moderationPendingCount">{{ pending_count }}</b><small>требуют решения</small></div>
+    <div class="stat-card"><span>Подтверждено</span><b>{{ confirmed_count }}</b><small>нарушение подтверждено</small></div>
+    <div class="stat-card"><span>Приняты меры</span><b>{{ actioned_count }}</b><small>аккаунт / кейс обработан</small></div>
+    <div class="stat-card"><span>Ложные срабатывания</span><b>{{ dismissed_count }}</b><small>закрыто без санкций</small></div>
+    <div class="stat-card {% if not worker_online %}moderation-stat-error{% endif %}" id="moderationWorkerCard"><span>Обработчик</span><b id="moderationWorkerState" style="font-size:18px">{% if worker_online %}РАБОТАЕТ{% else %}НЕ РАБОТАЕТ{% endif %}</b><small><span id="moderationQueueCount">{{ queue_count }}</span> в очереди</small></div>
+    <div class="stat-card {% if error_count %}moderation-stat-error{% endif %}"><span>Ошибки проверки</span><b id="moderationErrorCount">{{ error_count }}</b><small>нужно проверить обработчик</small></div>
+  </div>
+
+  <div class="admin-warning">
+    Модель работает в строгом режиме и создаёт <b>сигнал для ручной проверки</b>. В карточке сохраняются отправитель, чат, сообщение, оценка риска, метки, хеш файла и серверная копия доказательства.
+  </div>
+
+  <section class="admin-panel moderation-policy-panel">
+    <div class="admin-section-head"><div><h2>Что именно фиксирует контроль 18+</h2><span>Проверка выполняется только для данных, отправленных в {{ APP_NAME }}.</span></div></div>
+    <div class="moderation-policy-grid">
+      <div><b>Фото и аватары</b><span>Открытая грудь, женские и мужские гениталии, анус и ягодицы. Строгий порог: {{ exposed_threshold|floatformat:2 }}.</span></div>
+      <div><b>Прикрытый интимный контент</b><span>Прикрытая грудь, гениталии, анус и ягодицы при уверенности от {{ covered_threshold|floatformat:2 }}.</span></div>
+      <div><b>Видео</b><span>Анализируется {{ video_frames }} кадров по всей длине ролика, а не только обложка.</span></div>
+      <div><b>Текст и ссылки</b><span>18+ слова на русском, английском и узбекском, adult/NSFW/porno-ссылки и текст внутри изображений через OCR.</span></div>
+      <div><b>Доказательство</b><span>Отправитель, чат, ID сообщения, дата, метки модели, оценка, SHA-256, защищённая копия и превью.</span></div>
+      <div><b>Решение разработчика</b><span>Подтвердить, отклонить ложное срабатывание или заблокировать аккаунт. Автоматического наказания нет.</span></div>
+    </div>
+  </section>
+
+  <form class="admin-filterbar" method="get" id="moderationFilters">
+    <div class="admin-filter-search"><input name="q" value="{{ q }}" placeholder="Имя, @username, email, текст, detector или причина"></div>
+    <select name="status">
+      <option value="all" {% if status_filter == "all" %}selected{% endif %}>Все статусы</option>
+      {% for value,label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="kind">
+      <option value="">Все типы</option>
+      {% for value,label in kind_choices %}<option value="{{ value }}" {% if kind_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <button class="tg-button primary">Применить</button>
+    {% if q or status_filter != "pending" or kind_filter %}<a class="tg-button secondary" href="{% url 'control:moderation_queue' %}">Сбросить</a>{% endif %}
+  </form>
+
+
+  <section class="admin-panel" data-live-url="{% url 'control:moderation_live' %}" id="moderationLivePanel">
+    <div class="admin-section-head"><div><h2>Последние поступившие файлы</h2><span>Статусы обновляются внутри таблицы без перезагрузки страницы и без сброса фильтров.</span><small id="moderationSystemStatus">Проверяю модель и обработчик…</small></div><div><button class="tg-button secondary" type="button" id="moderationSelfTest" data-url="{% url 'control:moderation_self_test' %}">Тест 18+</button> <button class="tg-button secondary" type="button" id="refreshModerationLive">Обновить</button><small id="moderationLiveStamp"></small></div></div>
+    <table class="admin-table"><thead><tr><th>Получено</th><th>Состояние</th><th>Отправитель</th><th>Чат</th><th>Файл</th><th>Результат</th></tr></thead><tbody>
+    {% for job in recent_jobs %}<tr data-moderation-job="{{ job.pk }}"><td>{{ job.queued_at|date:"d.m.Y H:i:s" }}</td><td>{{ job.get_status_display }}</td><td>{% if job.avatar_user %}{{ job.avatar_user.email }}{% elif job.attachment.message.sender %}{{ job.attachment.message.sender.email }}{% else %}—{% endif %}</td><td>{% if job.attachment %}{{ job.attachment.message.conversation }}{% else %}Фото профиля{% endif %}</td><td>{% if job.attachment %}{{ job.attachment.original_name }}{% else %}Фото профиля{% endif %}</td><td>{% if job.case_count %}<b class="status-bad">СРАБОТАЛО: {{ job.case_count }}</b>{% elif job.status == "done" %}<span class="status-ok">Нарушение не найдено</span>{% elif job.status == "error" %}<span class="status-bad">Ошибка</span>{% else %}Проверяется{% endif %}</td></tr>{% empty %}<tr><td colspan="6">Новых файлов пока нет.</td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+
+  {% if error_jobs %}
+  <details class="admin-panel moderation-error-panel">
+    <summary><b>Ошибки проверки · {{ error_count }}</b><span>Последние задания с ошибкой</span></summary>
+    <table class="admin-table">
+      <thead><tr><th>Время</th><th>Источник</th><th>Пользователь</th><th>Файл / фото профиля</th><th>Попытки</th><th>Ошибка</th></tr></thead>
+      <tbody>
+      {% for job in error_jobs %}
+      <tr>
+        <td>{{ job.updated_at|date:"d.m.Y H:i:s" }}</td>
+        <td>{{ job.get_source_display }}</td>
+        <td>{% if job.avatar_user %}{{ job.avatar_user.email }}{% elif job.attachment.message.sender %}{{ job.attachment.message.sender.email }}{% else %}—{% endif %}</td>
+        <td>{% if job.attachment %}{{ job.attachment.original_name }}{% elif job.avatar_user %}profile avatar{% else %}—{% endif %}</td>
+        <td>{{ job.attempts }}</td>
+        <td class="wrap">{{ job.last_error|truncatechars:300 }}<form method="post" action="{% url 'control:moderation_job_retry' job.pk %}" style="margin-top:6px">{% csrf_token %}<button class="tg-button secondary">Повторить проверку</button></form></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </details>
+  {% endif %}
+
+  <section class="admin-panel moderation-grid-panel">
+    <div class="moderation-grid">
+      {% for x in rows %}
+      <a class="moderation-card" href="{% url 'control:moderation_case' x.pk %}">
+        <div class="moderation-thumb">
+          {% if x.evidence_preview %}
+            <img src="{% url 'control:moderation_evidence' x.pk 'preview' %}" alt="" loading="lazy">
+          {% elif x.kind == "text" %}
+            <div class="moderation-text-thumb">{{ x.text_snapshot|truncatechars:170 }}</div>
+          {% else %}
+            <div class="moderation-file-thumb">ФАЙЛ</div>
+          {% endif %}
+          <span class="moderation-score">{{ x.score|floatformat:2 }}</span>
+          <span class="moderation-kind">{{ x.get_kind_display }}</span>
+        </div>
+        <div class="moderation-card-body">
+          <div class="moderation-card-user">
+            <div class="tg-avatar tg-avatar-sm">
+              {% if x.sender and x.sender.avatar_url %}<img src="{{ x.sender.avatar_url }}" alt="">{% else %}<span>{% if x.sender %}{{ x.sender.initials }}{% else %}?{% endif %}</span>{% endif %}
+            </div>
+            <div>
+              <b>{{ x.sender.display_name|default:"Удалённый пользователь" }}</b>
+              <span>{% if x.sender and x.sender.handle %}@{{ x.sender.handle }} · {% endif %}{{ x.sender.email|default:"—" }}</span>
+            </div>
+          </div>
+          <div class="moderation-meta">
+            <span>{{ x.created_at|date:"d.m.Y H:i:s" }}</span>
+            <span>{{ x.detector }}</span>
+          </div>
+          <div class="moderation-labels">
+            {% for label in x.labels|slice:":4" %}
+              {% if label.class %}<span>{{ label.class }} {{ label.score|floatformat:2 }}</span>{% else %}<span>{{ label }}</span>{% endif %}
+            {% endfor %}
+          </div>
+          <div class="moderation-status {{ x.status }}">{{ x.get_status_display }}</div>
+        </div>
+      </a>
+      {% empty %}
+      <div class="tg-search-empty moderation-empty">По выбранному фильтру случаев нет.</div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="username-pagination">
+      <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      <div>
+        {% if page_obj.has_previous %}<a class="tg-button secondary" href="?q={{ q }}&status={{ status_filter }}&kind={{ kind_filter }}&page={{ page_obj.previous_page_number }}">← Назад</a>{% endif %}
+        {% if page_obj.has_next %}<a class="tg-button secondary" href="?q={{ q }}&status={{ status_filter }}&kind={{ kind_filter }}&page={{ page_obj.next_page_number }}">Дальше →</a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+</main></div>
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  const panel=document.getElementById("moderationLivePanel");
+  if(!panel)return;
+  const tbody=panel.querySelector("tbody"),button=document.getElementById("refreshModerationLive"),stamp=document.getElementById("moderationLiveStamp");
+  const esc=value=>{const node=document.createElement("div");node.textContent=value??"";return node.innerHTML};
+  let busy=false;
+  async function refreshLive(){
+    if(busy)return;busy=true;if(button){button.disabled=true;button.textContent="Проверяю…"}
+    try{
+      const response=await fetch(panel.dataset.liveUrl,{headers:{"X-Requested-With":"XMLHttpRequest"},cache:"no-store"});
+      if(!response.ok)throw new Error("Не удалось получить статусы");
+      const data=await response.json();
+      tbody.innerHTML=(data.rows||[]).map(row=>`<tr data-moderation-job="${esc(row.id)}"><td>${esc(row.queued_at)}</td><td>${esc(row.status_label)}</td><td>${esc(row.sender)}</td><td>${esc(row.chat)}</td><td>${esc(row.filename)}</td><td>${row.case_url?`<a class="status-bad" href="${esc(row.case_url)}"><b>${esc(row.result)}</b></a>`:row.status==="done"?`<span class="status-ok">${esc(row.result)}</span>`:row.status==="error"?`<span class="status-bad" title="${esc(row.error)}">${esc(row.result)}</span> <button class="tg-button secondary" type="button" data-retry-moderation="${esc(row.retry_url)}">Повторить</button>`:esc(row.result)}</td></tr>`).join("")||'<tr><td colspan="6">Новых файлов пока нет.</td></tr>';
+      document.getElementById("moderationPendingCount").textContent=data.pending_count;
+      document.getElementById("moderationQueueCount").textContent=data.queue_count;
+      document.getElementById("moderationErrorCount").textContent=data.error_count;
+      document.getElementById("moderationWorkerState").textContent=data.worker_online?"РАБОТАЕТ":"НЕ РАБОТАЕТ";
+      document.getElementById("moderationWorkerCard").classList.toggle("moderation-stat-error",!data.worker_online);
+      const systemStatus=document.getElementById("moderationSystemStatus");
+      if(systemStatus){systemStatus.textContent=data.worker_online&&data.detector_available?"Система готова: модель установлена, обработчик работает.":!data.detector_available?"ОШИБКА: модель NudeNet не установлена в контейнере.":"ОШИБКА: обработчик модерации не запущен.";systemStatus.className=data.worker_online&&data.detector_available?"status-ok":"status-bad"}
+      if(stamp)stamp.textContent=`Обновлено: ${new Intl.DateTimeFormat("ru-RU",{timeZone:"Asia/Tashkent",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(new Date(data.server_time))}`;
+    }catch(error){if(stamp)stamp.textContent=error.message}
+    finally{busy=false;if(button){button.disabled=false;button.textContent="Проверить сейчас"}}
+  }
+  tbody.addEventListener("click",async event=>{const retry=event.target.closest("[data-retry-moderation]");if(!retry)return;try{retry.disabled=true;await RMesUI.post(retry.dataset.retryModeration);await refreshLive()}catch(error){RMesUI.toast(error.message,"error")}finally{retry.disabled=false}});
+  document.getElementById("moderationSelfTest")?.addEventListener("click",async event=>{
+    const btn=event.currentTarget,old=btn.textContent;btn.disabled=true;btn.textContent="Тестирую…";
+    try{
+      const r=await fetch(btn.dataset.url,{method:"POST",headers:{"X-CSRFToken":RMesUI.csrf(),"X-Requested-With":"XMLHttpRequest"}});
+      const j=await r.json().catch(()=>({}));
+      const status=document.getElementById("moderationSystemStatus");
+      status.textContent=j.ok?"18+ контроль полностью готов: NudeNet загружен, worker отвечает.":`18+ контроль: ${j.detail||"проверка не пройдена"}`;
+      status.className=j.ok?"status-ok":"status-bad";
+      if(j.ok)RMesUI.toast("18+ контроль работает","success");else RMesUI.toast(j.detail||"Проверка 18+ не пройдена","error");
+      await refreshLive();
+    }catch(error){RMesUI.toast(error.message||"Ошибка теста","error")}finally{btn.disabled=false;btn.textContent=old}
+  });
+  button?.addEventListener("click",refreshLive);refreshLive();setInterval(refreshLive,2000);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,5 @@
+# Example when TLS terminates directly on this host.
+# Create two server blocks on 443 for chat.example.com and files.example.com,
+# configure ssl_certificate / ssl_certificate_key, and keep the same proxy locations
+# from templates/default.conf.template. In many corporate environments TLS is instead
+# terminated on an F5/HAProxy/load balancer in front of this Nginx service.

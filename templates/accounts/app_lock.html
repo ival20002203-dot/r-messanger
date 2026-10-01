@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Заблокировано — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="app-lock-screen" id="appLockScreen">
+  <div class="app-lock-card">
+    <div class="app-lock-brand">
+      <img src="{% static 'rmes-icon.png' %}" alt="R-Messanger">
+      <div><strong>{{ APP_NAME }}</strong><span>{% if IS_DESKTOP_APP %}Desktop{% else %}Web{% endif %}</span></div>
+    </div>
+    <div class="app-lock-avatar tg-avatar">
+      {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="">{% else %}<span>{{ user.initials }}</span>{% endif %}
+    </div>
+    <h1>{{ user.display_name }}</h1>
+    <p>R-Messanger заблокирован. Введите ваш код-пароль.</p>
+    <form method="post" id="appLockUnlockForm" autocomplete="off">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <label class="app-lock-pin-wrap">
+        <input id="appLockCode" name="code" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" autofocus aria-label="Код-пароль">
+        <span class="app-lock-dots" id="appLockDots" aria-hidden="true"></span>
+      </label>
+      {% if error %}<div class="app-lock-error">{{ error }}</div>{% else %}<div class="app-lock-hint">4–8 цифр</div>{% endif %}
+      <button class="tg-button primary app-lock-submit" type="submit">Разблокировать</button>
+    </form>
+    <a class="app-lock-logout" href="{% url 'accounts:logout' %}">Войти в другую учётную запись</a>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(()=>{
+  const input=document.querySelector("#appLockCode"),dots=document.querySelector("#appLockDots");
+  function render(){
+    const n=Math.min(8,input?.value.length||0);
+    dots.innerHTML=Array.from({length:Math.max(4,n)},(_,i)=>`<i class="${i<n?'filled':''}"></i>`).join("");
+  }
+  input?.addEventListener("input",()=>{input.value=input.value.replace(/\D/g,"").slice(0,8);render()});
+  document.addEventListener("keydown",()=>input?.focus());
+  render();
+})();
+</script>
+{% endblock %}

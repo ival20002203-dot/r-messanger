@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Пользователи — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main">
+  <div class="control-head"><div><h1>Пользователи</h1><p>Поиск, роли, platform block и индивидуальные ограничения.</p></div></div>
+
+  <form class="admin-filterbar">
+    <div class="admin-filter-search"><input name="q" value="{{ q }}" placeholder="Имя, email или @username"></div>
+    <select name="role">
+      <option value="">Все роли</option>
+      {% for value,label in role_choices %}<option value="{{ value }}" {% if role_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="status">
+      <option value="">Все статусы</option>
+      <option value="active" {% if status_filter == "active" %}selected{% endif %}>Активные</option>
+      <option value="blocked" {% if status_filter == "blocked" %}selected{% endif %}>Platform blocked</option>
+      <option value="login_off" {% if status_filter == "login_off" %}selected{% endif %}>Вход запрещён</option>
+    </select>
+    <button class="tg-button primary">Применить</button>
+    {% if q or role_filter or status_filter %}<a class="tg-button secondary" href="{% url 'control:users' %}">Сбросить</a>{% endif %}
+  </form>
+
+  <section class="admin-panel">
+    <table class="admin-table">
+      <thead><tr><th>Пользователь</th><th>Роль</th><th>Статус</th><th>Presence</th><th>Ограничения</th><th></th></tr></thead>
+      <tbody>
+      {% for x in rows %}
+      <tr>
+        <td><div class="admin-user-cell"><div class="tg-avatar tg-avatar-sm">{% if x.avatar_url %}<img src="{{ x.avatar_url }}" alt="">{% else %}<span>{{ x.initials }}</span>{% endif %}</div><div><b>{{ x.display_name }}</b><span>{% if x.handle %}@{{ x.handle }} · {% endif %}{{ x.email }}</span></div></div></td>
+        <td>{% if x.is_developer %}<span class="developer-badge">DEVELOPER</span>{% else %}{{ x.get_role_display }}{% endif %}</td>
+        <td>{% if x.is_suspended %}<span class="admin-status blocked">Blocked</span>{% elif not x.can_login %}<span class="admin-status warning">Login off</span>{% else %}<span class="admin-status active">Active</span>{% endif %}</td>
+        <td>{% if x.presence_hidden %}<span class="subtle">скрыто</span>{% elif x.presence_online %}<span class="status-ok">● В СЕТИ</span><div class="subtle">{{ x.presence_label }}</div>{% else %}<span class="subtle">{{ x.presence_label }}</span>{% endif %}</td>
+        <td><div class="permission-tags">{% if not x.can_send_messages %}<span>MSG</span>{% endif %}{% if not x.can_upload_files %}<span>FILES</span>{% endif %}{% if not x.can_make_calls %}<span>CALLS</span>{% endif %}{% if not x.can_create_groups %}<span>GROUPS</span>{% endif %}{% if not x.can_start_direct_chats %}<span>DIRECT</span>{% endif %}{% if x.can_send_messages and x.can_upload_files and x.can_make_calls and x.can_create_groups and x.can_start_direct_chats %}<i>нет</i>{% endif %}</div></td>
+        <td><a class="tg-button secondary" href="{% url 'control:user_detail' x.pk %}">Открыть</a></td>
+      </tr>
+      {% empty %}<tr><td colspan="6"><div class="tg-search-empty">Пользователи не найдены.</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main></div>
+{% endblock %}

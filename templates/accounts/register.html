@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Регистрация — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <section class="auth-card auth-card-wide auth-card-with-back">
+    <a class="auth-back-btn" href="{% url 'accounts:login' %}" title="Назад ко входу" aria-label="Назад ко входу">
+      <svg><use href="{% static 'icons.svg' %}#back"></use></svg>
+    </a>
+    <div class="step-badge">Шаг 1 из 2</div>
+    <div class="auth-brand"><img class="rmes-brand-logo" src="{% static 'rmes-icon.png' %}" alt="R-Messanger"><div><b>{{ APP_NAME }}</b><span>Корпоративная регистрация</span></div></div>
+    <h1>{% if editing_registration %}Изменить данные{% else %}Создать аккаунт{% endif %}</h1>
+    {% if editing_registration %}
+    <p class="subtle">Измените почту или имя и запросите новый код. В целях безопасности пароль нужно ввести повторно.</p>
+    {% else %}
+    <p class="subtle">После заполнения формы мы отправим 6‑значный код на корпоративную почту. До подтверждения аккаунт не создаётся.</p>
+    {% endif %}
+    <form method="post" class="stack">{% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+      <div class="field {% if field.name == 'accept_policy' %}check-field{% endif %}">
+        {% if field.name == "accept_policy" %}{{ field }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {% else %}<label>{{ field.label }}</label>{{ field }}{% endif %}
+        {{ field.errors }}
+      </div>
+      {% endfor %}
+      <button class="button primary wide" type="submit">Отправить код на почту</button>
+    </form>
+    <div class="auth-foot"><a href="{% url 'accounts:login' %}">У меня уже есть аккаунт</a></div>
+</section>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main"><div class="control-head"><div><h1>IP / CIDR правила</h1><p>Запрет или разрешение отдельных адресов и подсетей.</p></div></div>
+<section class="admin-panel"><form method="post" class="stack">{% csrf_token %}{{ form.as_p }}<button class="button primary">Добавить правило</button></form></section>
+<section class="admin-panel"><table class="admin-table"><thead><tr><th>Сеть</th><th>Действие</th><th>Примечание</th><th>Активно</th><th></th></tr></thead><tbody>
+{% for x in rows %}<tr><td>{{ x.network }}</td><td>{{ x.get_action_display }}</td><td>{{ x.note }}</td><td>{{ x.active }}</td><td><form method="post" action="{% url 'control:ip_delete' x.pk %}">{% csrf_token %}<button class="button danger small">Удалить</button></form></td></tr>{% endfor %}
+</tbody></table></section></main></div>
+{% endblock %}

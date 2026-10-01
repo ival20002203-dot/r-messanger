@@ -1,0 +1,10 @@
+R-Mes 13.8.4 validation
+
+- VERSION=13.8.4
+- Server timezone: Asia/Tashkent, USE_TZ=True
+- Message payload: canonical UTC ISO + epoch milliseconds + server-local time_hm/created_at_local
+- Chat bubbles, sidebar and notifications prefer server-local time_hm; device timezone is not used for visible clocks
+- Presence API reloads durable last_seen_at after heartbeat and returns no-store/server_time_ms
+- WebSocket presence includes server_time_ms; native message/file actions refresh last-seen
+- Operations migration: operations.0017_artel_link_v13_8_4_client_policy
+- JavaScript syntax: static/app.js, static/chat.js, static/i18n.js, desktop/main.js

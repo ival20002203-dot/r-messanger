@@ -1,0 +1,5 @@
+R-Mes 13.6.0 validation
+- non-blocking attachments
+- background ClamAV/DLP
+- moderation queue self-healing
+- presentation deployment script

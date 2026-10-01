@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Входы — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main">
+  <div class="control-head"><div><h1>Журнал входов</h1><p>Успешная и неуспешная авторизация, IP и устройства.</p></div></div>
+  <form class="admin-filterbar">
+    <div class="admin-filter-search"><input name="q" value="{{ q }}" placeholder="Email, IP, причина или User-Agent"></div>
+    <select name="result"><option value="">Все результаты</option><option value="success" {% if result_filter == "success" %}selected{% endif %}>Успешные</option><option value="failed" {% if result_filter == "failed" %}selected{% endif %}>Ошибки</option></select>
+    <button class="tg-button primary">Применить</button>
+    {% if q or result_filter %}<a class="tg-button secondary" href="{% url 'control:login_log' %}">Сбросить</a>{% endif %}
+  </form>
+  <section class="admin-panel">
+    <table class="admin-table"><thead><tr><th>Время</th><th>Аккаунт</th><th>IP</th><th>Результат</th><th>Причина</th><th>Устройство</th></tr></thead>
+    <tbody>{% for x in rows %}<tr><td>{{ x.created_at|date:"d.m.Y H:i:s" }}</td><td>{{ x.email }}</td><td><code>{{ x.ip_address|default:"—" }}</code></td><td>{% if x.successful %}<span class="admin-status active">SUCCESS</span>{% else %}<span class="admin-status blocked">FAILED</span>{% endif %}</td><td>{{ x.reason }}</td><td class="wrap">{{ x.user_agent|truncatechars:160 }}</td></tr>{% empty %}<tr><td colspan="6">Нет записей.</td></tr>{% endfor %}</tbody></table>
+  </section>
+</main></div>
+{% endblock %}

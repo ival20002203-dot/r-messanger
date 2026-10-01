@@ -1,0 +1,33 @@
+from django.urls import path
+from . import views
+app_name="accounts"
+urlpatterns=[
+    path("login/",views.login_view,name="login"),
+    path("login/verify/",views.login_verify,name="login_verify"),
+    path("register/",views.register_view,name="register"),
+    path("register/verify/",views.register_verify,name="register_verify"),
+    path("register/resend/",views.register_resend,name="register_resend"),
+    path("logout/",views.logout_view,name="logout"),
+    path("profile/",views.profile_view,name="profile"),
+    path("profile/username-check/",views.username_check,name="username_check"),
+    path("profile/save/",views.profile_save_api,name="profile_save_api"),
+    path("profile/preferences/save/",views.preferences_save_api,name="preferences_save_api"),
+    path("profile/presence-privacy/",views.presence_privacy_api,name="presence_privacy_api"),
+    path("profile/presence-privacy/exception/",views.presence_privacy_exception_api,name="presence_privacy_exception_api"),
+    path("profile/language/",views.language_api,name="language_api"),
+    path("profile/avatar/remove/",views.avatar_remove_api,name="avatar_remove_api"),
+    path("avatar/<int:user_id>/",views.avatar_image,name="avatar_image"),
+    path("presence/",views.presence_api,name="presence_api"),
+    path("presence/batch/",views.presence_batch_api,name="presence_batch_api"),
+    path("push-token/",views.push_token_api,name="push_token_api"),
+    path("profile/unblock/<int:user_id>/",views.unblock_from_settings,name="unblock_from_settings"),
+    path("profile/revoke-other-sessions/",views.revoke_other_sessions,name="revoke_other_sessions"),
+    path("profile/device/<int:device_id>/revoke/",views.revoke_device_session,name="revoke_device_session"),
+    path("app-lock/",views.app_lock_view,name="app_lock"),
+    path("app-lock/status/",views.app_lock_status_api,name="app_lock_status"),
+    path("app-lock/activity/",views.app_lock_activity_api,name="app_lock_activity"),
+    path("app-lock/lock/",views.app_lock_lock_api,name="app_lock_lock"),
+    path("app-lock/settings/",views.app_lock_settings_api,name="app_lock_settings"),
+    path("app-lock/desktop-start/",views.app_lock_desktop_start,name="app_lock_desktop_start"),
+    path("app-lock/client-start/",views.app_lock_desktop_start,name="app_lock_client_start"),
+]

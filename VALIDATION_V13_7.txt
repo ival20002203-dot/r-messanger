@@ -1,0 +1,24 @@
+R-Mes 13.7.0 validation
+Date: 2026-09-09
+
+PASS  Django system check: 0 issues
+PASS  Django automated tests: 25/25
+PASS  Database migrations applied on a clean test database
+PASS  JavaScript syntax: static/app.js
+PASS  JavaScript syntax: static/chat.js
+PASS  JavaScript syntax: desktop/main.js
+PASS  JavaScript syntax: desktop/preload.js
+PASS  Django templates compiled: 43/43
+PASS  Shell syntax: release_13_7.sh
+PASS  Shell syntax: publish_client_update.sh
+PASS  Shell syntax: rebuild_server.sh
+PASS  Shell syntax: enable_call_ports.sh
+
+Covered by automated regression tests:
+- one/two receipt transitions after read
+- independent call polling cursors for multiple windows
+- idempotent audio-only call signaling
+- protected developer copy after clear/delete
+- absence of protected-retention metadata in public response
+- private attachment authorization and HTTP Range playback
+- regular-user denial for admin/forensic routes

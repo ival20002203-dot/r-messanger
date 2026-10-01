@@ -1,0 +1,24 @@
+R-Mes 15.0.0 — release check
+
+Проверено перед упаковкой:
+- Python source syntax: OK
+- JavaScript syntax (node --check): OK
+- JSON/XML/plist parsing: OK
+- Docker Compose YAML parsing: OK
+- shell scripts (bash -n): OK
+- PowerShell scripts: нет ошибочных literal \\n переносов
+- активных Artel/Артел/Артель ссылок вне legacy Django migrations: нет
+- version: 15.0.0 в Desktop / Android / iOS
+- CallRecord + admin-only recording archive: есть
+- push FCM/APNs integration: есть (нужны внешние ключи провайдеров)
+- accurate presence/privacy patch: включён
+- 18+ NudeNet worker/control: включён
+- voice waveform/seek/speed/live animation: включены
+- native Android/iOS shell + deep links: включены
+- public Docker+Caddy+TURN deployment scripts: включены
+
+Ограничения сборочного окружения ChatGPT:
+- подписанный iOS IPA нельзя выпустить без вашего Apple Developer Team/macOS/Xcode;
+- подписанный Android release использует ваш keystore и Android SDK;
+- Windows Electron installer требует npm/electron-builder на Windows.
+Для всех трёх клиентов в проекте есть исходники и сборочные скрипты.

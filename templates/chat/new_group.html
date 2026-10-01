@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="modal-page">
+<section class="modal-card large">
+  <a href="{% url 'chat:home' %}" class="modal-close">×</a>
+  <h1>Новая группа / канал</h1>
+  <p class="subtle">Настройте пространство и добавьте сотрудников через живой поиск.</p>
+  <form method="post" class="stack" id="newGroupForm">{% csrf_token %}
+    <div><label>{{ form.title.label }}</label>{{ form.title }}{{ form.title.errors }}</div>
+    <div><label>{{ form.kind.label }}</label>{{ form.kind }}</div>
+    <div><label>{{ form.description.label }}</label>{{ form.description }}</div>
+
+    <div class="member-picker">
+      <label>Участники</label>
+      <div class="selected-members" id="selectedMembers"></div>
+      <div class="tg-search-wrap" style="margin-top:8px">
+        <svg class="tg-search-icon"><use href="{% static 'icons.svg' %}#search"></use></svg>
+        <input type="text" id="groupMemberSearch" placeholder="Имя, email или @username" autocomplete="off">
+      </div>
+      <div class="member-picker-results hidden" id="memberPickerResults"></div>
+      <div style="display:none">{{ form.members }}</div>
+    </div>
+
+    <button class="tg-button primary" type="submit">Создать</button>
+  </form>
+</section>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+  const input=document.querySelector("#groupMemberSearch"),results=document.querySelector("#memberPickerResults");
+  const hidden=document.querySelector("#id_members"),selected=document.querySelector("#selectedMembers");
+  const people=new Map();
+
+  function redraw(){
+    selected.innerHTML=[...people.entries()].map(([email,p])=>`<button type="button" class="member-chip" data-email="${RMesUI.esc(email)}">${p.avatar?`<img src="${p.avatar}" alt="">`:""}<span>${RMesUI.esc(p.name)}</span><b>×</b></button>`).join("");
+    hidden.value=[...people.keys()].join(",");
+  }
+  selected.addEventListener("click",e=>{const b=e.target.closest(".member-chip");if(b){people.delete(b.dataset.email);redraw()}});
+
+  const run=RMesUI.debounce(async()=>{
+    const q=input.value.trim();if(!q){results.classList.add("hidden");return}
+    const r=await fetch(`{% url 'chat:search_suggest' %}?q=${encodeURIComponent(q)}`);const j=await r.json();
+    results.innerHTML=(j.people||[]).filter(p=>!p.blocked).map(p=>`<button type="button" class="member-pick-row" data-id="${p.id}" data-email="${RMesUI.esc(p.email)}" data-name="${RMesUI.esc(p.name)}" data-avatar="${p.avatar||""}">
+      <div class="tg-avatar tg-avatar-sm">${p.avatar?`<img src="${p.avatar}" alt="">`:`<span>${RMesUI.esc(p.initials)}</span>`}</div>
+      <div><b>${RMesUI.esc(p.name)}</b><span>${p.handle?`@${RMesUI.esc(p.handle)} · `:""}${RMesUI.esc(p.email)}</span></div>
+    </button>`).join("")||'<div class="tg-search-empty">Ничего не найдено</div>';
+    results.classList.remove("hidden");
+  },140);
+  input.addEventListener("input",run);
+  results.addEventListener("click",e=>{
+    const b=e.target.closest(".member-pick-row");if(!b)return;
+    people.set(b.dataset.email,{name:b.dataset.name,avatar:b.dataset.avatar});
+    redraw();input.value="";results.classList.add("hidden");input.focus();
+  });
+});
+</script>
+{% endblock %}

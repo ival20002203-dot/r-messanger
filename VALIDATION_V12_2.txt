@@ -1,0 +1,11 @@
+R-Mes 12.2.0 validation
+
+[OK] JavaScript syntax: static/app.js
+[OK] JavaScript syntax: static/chat.js
+[OK] Quick lock control rendered in templates/chat/shell.html
+[OK] Existing server app-lock endpoints reused; no schema change required
+[OK] Emoji picker has category tabs and recent history
+[OK] Emoji insertion preserves cursor position
+[OK] Existing stickers remain separate and unchanged
+[OK] Existing 12.1 web access toggle preserved
+[OK] No Docker volume or database migration changes

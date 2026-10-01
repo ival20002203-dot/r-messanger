@@ -1,0 +1,48 @@
+{% load static %}
+<aside class="control-nav">
+  <div class="control-brand">
+    <img class="rmes-control-logo" src="{% static 'rmes-icon.png' %}" alt="R-Messanger">
+    <div><b>{{ APP_NAME }}</b><span>ПАНЕЛЬ УПРАВЛЕНИЯ</span></div>
+  </div>
+
+  <div class="control-nav-section">Система</div>
+  <a class="nav-link" href="{% url 'control:dashboard' %}"><svg><use href="{% static 'icons.svg' %}#shield"></use></svg><span class="nav-copy"><b>Главная</b><small>Состояние R-Messanger</small></span></a>
+  <a class="nav-link" href="{% url 'control:infrastructure_status' %}"><svg><use href="{% static 'icons.svg' %}#info"></use></svg><span class="nav-copy"><b>Инфраструктура</b><small>Серверы и очереди</small></span></a>
+  {% if user.can_view_users %}<a class="nav-link" href="{% url 'control:users' %}"><svg><use href="{% static 'icons.svg' %}#users"></use></svg><span class="nav-copy"><b>Пользователи</b><small>Права и блокировки</small></span></a>{% endif %}
+  {% if user.can_view_chat_audit %}<a class="nav-link" href="{% url 'control:conversations' %}"><svg><use href="{% static 'icons.svg' %}#edit"></use></svg><span class="nav-copy"><b>Чаты</b><small>Метаданные переписок</small></span></a>{% endif %}
+
+  {% if user.can_view_security or user.can_view_audit %}<div class="control-nav-section">Безопасность</div>{% endif %}
+  {% if user.can_view_security %}<a class="nav-link" href="{% url 'control:login_log' %}"><svg><use href="{% static 'icons.svg' %}#lock"></use></svg><span class="nav-copy"><b>Журнал входов</b><small>Успешные и ошибочные</small></span></a>{% endif %}
+  {% if user.can_view_audit %}<a class="nav-link" href="{% url 'control:audit_log' %}"><svg><use href="{% static 'icons.svg' %}#info"></use></svg><span class="nav-copy"><b>Журнал действий</b><small>Кто что изменил</small></span></a>{% endif %}
+  {% if user.can_view_security %}<a class="nav-link" href="{% url 'control:security_center' %}"><svg><use href="{% static 'icons.svg' %}#shield"></use></svg><span class="nav-copy"><b>Центр безопасности</b><small>Риски и инциденты</small></span></a>
+  <a class="nav-link" href="{% url 'control:dlp_cases' %}"><svg><use href="{% static 'icons.svg' %}#search"></use></svg><span class="nav-copy"><b>Утечки данных</b><small>Номера и секреты</small></span></a>
+  <a class="nav-link" href="{% url 'control:antivirus' %}"><svg><use href="{% static 'icons.svg' %}#lock"></use></svg><span class="nav-copy"><b>Антивирус</b><small>Проверка вложений</small></span></a>
+  <a class="nav-link" href="{% url 'control:device_sessions' %}"><svg><use href="{% static 'icons.svg' %}#user"></use></svg><span class="nav-copy"><b>Устройства</b><small>Сессии пользователей</small></span></a>{% endif %}
+  {% if user.can_view_backups %}<a class="nav-link" href="{% url 'control:backup_center' %}"><svg><use href="{% static 'icons.svg' %}#archive"></use></svg><span class="nav-copy"><b>Резервные копии</b><small>Копирование и восстановление</small></span></a>{% endif %}
+  {% if user.is_developer %}
+  <a class="nav-link dev-only" href="{% url 'control:call_records' %}"><svg><use href="{% static 'icons.svg' %}#phone"></use></svg><span class="nav-copy"><b>Звонки</b><small>Журнал и записи разговоров</small></span><em>РАЗР.</em></a>
+  <a class="nav-link dev-only" href="{% url 'control:forensics' %}"><svg><use href="{% static 'icons.svg' %}#search"></use></svg><span class="nav-copy"><b>Удалённые данные</b><small>Скрытые копии и аудит</small></span><em>РАЗР.</em></a>
+  <a class="nav-link dev-only" href="{% url 'control:moderation_queue' %}"><svg><use href="{% static 'icons.svg' %}#shield"></use></svg><span class="nav-copy"><b>Контроль 18+</b><small>Фото, видео и текст</small></span><em>РАЗР.</em></a>
+  <a class="nav-link dev-only" href="{% url 'control:rbac_roles' %}"><svg><use href="{% static 'icons.svg' %}#users"></use></svg><span class="nav-copy"><b>Роли и права</b><small>Настройка доступа</small></span><em>РАЗР.</em></a>
+  <a class="nav-link dev-only" href="{% url 'control:client_versions' %}"><svg><use href="{% static 'icons.svg' %}#settings"></use></svg><span class="nav-copy"><b>Версии приложений</b><small>Внутренние обновления</small></span><em>РАЗР.</em></a>
+  {% endif %}
+
+  {% if user.can_manage_policies %}
+  <div class="control-nav-section">Политики</div>
+  <a class="nav-link" href="{% url 'control:domains' %}"><svg><use href="{% static 'icons.svg' %}#user"></use></svg><span class="nav-copy"><b>Домены регистрации</b><small>Разрешённая почта</small></span></a>
+  <a class="nav-link" href="{% url 'control:reserved_usernames' %}"><svg><use href="{% static 'icons.svg' %}#lock"></use></svg><span class="nav-copy"><b>Имена пользователей</b><small>Резерв, выдача и отзыв</small></span></a>
+  <a class="nav-link" href="{% url 'control:ip_rules' %}"><svg><use href="{% static 'icons.svg' %}#block"></use></svg><span class="nav-copy"><b>Доступ по IP</b><small>Разрешённые сети</small></span></a>
+  <a class="nav-link" href="{% url 'control:settings' %}"><svg><use href="{% static 'icons.svg' %}#settings"></use></svg><span class="nav-copy"><b>Общие настройки</b><small>Политики системы</small></span></a>
+  {% endif %}
+
+  {% if user.is_developer %}
+  <a class="nav-link dev-only" href="{% url 'control:export_messages' %}"><svg><use href="{% static 'icons.svg' %}#archive"></use></svg><span class="nav-copy"><b>Экспорт переписки</b><small>Выгрузка для проверки</small></span></a>
+  {% endif %}
+
+  <div class="control-nav-spacer"></div>
+  <div class="control-admin-chip">
+    <div class="tg-avatar tg-avatar-sm">{% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="">{% else %}<span>{{ user.initials }}</span>{% endif %}</div>
+    <div><b>{{ user.display_name }}</b><span>{{ user.get_role_display }}</span></div>
+  </div>
+  <a class="nav-link back-messenger" href="{% url 'chat:home' %}"><svg><use href="{% static 'icons.svg' %}#back"></use></svg><span>В мессенджер</span></a>
+</aside>

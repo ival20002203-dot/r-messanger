@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="modal-page">
+<section class="modal-card large">
+  <a href="{% url 'chat:home' %}" class="modal-close">×</a>
+  <h1>Новое сообщение</h1>
+  <p class="subtle">Начните вводить имя, корпоративную почту или @username.</p>
+  <div class="tg-search-wrap" style="margin:18px 0">
+    <svg class="tg-search-icon"><use href="{% static 'icons.svg' %}#search"></use></svg>
+    <input type="text" id="newDirectSearch" placeholder="Поиск сотрудника" autofocus autocomplete="off">
+  </div>
+  <div class="direct-picker-results" id="newDirectResults"><div class="tg-search-empty">Начните вводить имя.</div></div>
+
+  <details style="margin-top:16px">
+    <summary class="subtle" style="cursor:pointer">Открыть напрямую по email</summary>
+    <form method="post" class="stack" style="margin-top:10px">{% csrf_token %}{{ form.as_p }}<button class="tg-button primary">Открыть диалог</button></form>
+  </details>
+</section>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+  const input=document.querySelector("#newDirectSearch"),out=document.querySelector("#newDirectResults");
+  const run=RMesUI.debounce(async()=>{
+    const q=input.value.trim();if(!q){out.innerHTML='<div class="tg-search-empty">Начните вводить имя.</div>';return}
+    const r=await fetch(`{% url 'chat:search_suggest' %}?q=${encodeURIComponent(q)}`);const j=await r.json();
+    out.innerHTML=(j.people||[]).map(p=>`<a class="member-pick-row ${p.blocked?"disabled-row":""}" href="${p.blocked?"#":p.url}">
+      <div class="tg-avatar tg-avatar-sm">${p.avatar?`<img src="${p.avatar}" alt="">`:`<span>${RMesUI.esc(p.initials)}</span>`}</div>
+      <div><b>${RMesUI.esc(p.name)}</b><span>${p.handle?`@${RMesUI.esc(p.handle)} · `:""}${RMesUI.esc(p.email)}</span></div>
+      <em>${RMesUI.esc(p.status||"")}</em>
+    </a>`).join("")||'<div class="tg-search-empty">Ничего не найдено</div>';
+  },140);
+  input.addEventListener("input",run);
+});
+</script>
+{% endblock %}

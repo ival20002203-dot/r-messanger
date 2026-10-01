@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main">
+  <div class="control-head"><div><h1>Системные настройки</h1><p>Политика приложения, SMTP и технические лимиты.</p></div></div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><span>SMTP host</span><b style="font-size:15px">{{ smtp_host|default:"—" }}:{{ smtp_port }}</b></div>
+    <div class="stat-card"><span>SMTP user</span><b style="font-size:15px">{{ smtp_user|default:"—" }}</b></div>
+    <div class="stat-card"><span>Login email 2FA</span><b style="font-size:15px">{% if login_2fa %}ON{% else %}OFF{% endif %}</b></div>
+    <div class="stat-card"><span>Max upload</span><b style="font-size:15px">{{ max_upload_mb }} MB</b></div>
+  </div>
+
+  {% for x in rows %}
+  <section class="admin-panel">
+    <h2>{{ x.description|default:x.key }}</h2>
+    <form method="post" class="stack">{% csrf_token %}<input type="hidden" name="key" value="{{ x.key }}"><textarea name="value" rows="4">{{ x.value }}</textarea><button class="tg-button primary">Сохранить</button></form>
+  </section>
+  {% endfor %}
+
+  {% if user.is_developer %}
+  <section class="admin-panel">
+    <div class="admin-section-head"><h2>18+ Content Moderation</h2><a class="tg-button secondary" href="{% url 'control:moderation_queue' %}">Открыть очередь</a></div>
+    <div class="settings-grid">
+      <div class="preference-row"><div><b>Moderation master</b><span>CONTENT_MODERATION_ENABLED</span></div><span class="{% if moderation_enabled %}status-ok{% else %}status-bad{% endif %}">{% if moderation_enabled %}ON{% else %}OFF{% endif %}</span></div>
+      <div class="preference-row"><div><b>Text rules</b><span>18+ ключевые слова / ссылки</span></div><span class="{% if moderation_text_enabled %}status-ok{% else %}status-bad{% endif %}">{% if moderation_text_enabled %}ON{% else %}OFF{% endif %}</span></div>
+      <div class="preference-row"><div><b>Media model</b><span>NudeNet worker</span></div><span class="{% if moderation_media_enabled %}status-ok{% else %}status-bad{% endif %}">{% if moderation_media_enabled %}ON{% else %}OFF{% endif %}</span></div>
+      <div class="preference-row"><div><b>Review threshold</b><span>чем выше — тем меньше чувствительность</span></div><b>{{ moderation_threshold }}</b></div>
+    </div>
+    <div class="security-banner" style="margin-top:12px"><div>{{ moderation_notice }}</div></div>
+    <p class="subtle">Эти параметры задаются через <code>.env</code>, чтобы обычная веб-панель не могла незаметно менять сам движок сканирования.</p>
+  </section>
+  {% endif %}
+
+  <section class="admin-panel">
+    <h2>Проверка SMTP</h2>
+    <p class="subtle">Пароль SMTP читается только из <code>.env</code> и не показывается в браузере.</p>
+    <form method="post" action="{% url 'control:smtp_test' %}" class="searchbar">{% csrf_token %}<input type="email" name="recipient" value="{{ user.email }}" placeholder="Куда отправить тест"><button class="tg-button primary">Отправить тест</button></form>
+  </section>
+</main></div>
+{% endblock %}

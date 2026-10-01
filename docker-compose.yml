@@ -1,0 +1,155 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-localgram}
+      POSTGRES_USER: ${POSTGRES_USER:-localgram}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE_DB_PASSWORD}
+    volumes:
+      - localgram_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-localgram} -d ${POSTGRES_DB:-localgram}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - localgram_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    env_file: .env
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-localgram}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-CHANGE_MINIO_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - localgram_minio:/data
+
+  minio-init:
+    image: minio/mc:latest
+    restart: "no"
+    env_file: .env
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-localgram}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-CHANGE_MINIO_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET:-localgram-media}
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\"; do sleep 2; done;
+      mc mb --ignore-existing local/$$MINIO_BUCKET;
+      mc anonymous set none local/$$MINIO_BUCKET;
+      exit 0;"
+
+  clamav:
+    image: clamav/clamav:stable
+    restart: unless-stopped
+    volumes:
+      - localgram_clamav:/var/lib/clamav
+
+  coturn:
+    image: coturn/coturn:latest
+    restart: unless-stopped
+    network_mode: host
+    command: >
+      -n --log-file=stdout --fingerprint --lt-cred-mech --realm=r-mes
+      --user=${TURN_USERNAME:-rmes}:${TURN_PASSWORD:-RMes-Turn-ChangeMe}
+      --listening-port=3478 --min-port=49160 --max-port=49200
+      --external-ip=${TURN_HOST:-10.10.10.130} --no-cli
+
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      minio-init:
+        condition: service_completed_successfully
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./media:/app/media
+      - ./private_media:/app/private_media
+      - ./logs:/app/logs
+      - ./client_updates:/app/client_updates:ro
+    command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "localgram.asgi:application"]
+
+  moderator:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SKIP_STARTUP_MIGRATIONS: "1"
+    depends_on:
+      web:
+        condition: service_started
+      minio:
+        condition: service_started
+    volumes:
+      - ./media:/app/media
+      - ./private_media:/app/private_media
+      - ./logs:/app/logs
+    command: ["python", "manage.py", "run_moderation_worker"]
+
+  securityworker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SKIP_STARTUP_MIGRATIONS: "1"
+    depends_on:
+      web:
+        condition: service_started
+      clamav:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    volumes:
+      - ./private_media:/app/private_media
+      - ./logs:/app/logs
+    command: ["python", "manage.py", "run_security_worker"]
+
+  scheduler:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SKIP_STARTUP_MIGRATIONS: "1"
+    depends_on:
+      web:
+        condition: service_started
+    volumes:
+      - ./logs:/app/logs
+    command: ["python", "manage.py", "run_scheduled_posts"]
+
+volumes:
+  localgram_postgres:
+    name: localgram_localgram_postgres
+  localgram_redis:
+    name: localgram_localgram_redis
+  localgram_minio:
+    name: localgram_localgram_minio
+  localgram_clamav:
+    name: localgram_localgram_clamav

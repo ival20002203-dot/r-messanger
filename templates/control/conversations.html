@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Чаты — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main">
+  <div class="control-head"><div><h1>Чаты</h1><p>Метаданные личных диалогов, групп и каналов.</p></div></div>
+  <form class="admin-filterbar">
+    <div class="admin-filter-search"><input name="q" value="{{ q }}" placeholder="Название, участник, @username, email или текст"></div>
+    <select name="kind"><option value="">Все типы</option>{% for value,label in kind_choices %}<option value="{{ value }}" {% if kind_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    <button class="tg-button primary">Найти</button>
+    {% if q or kind_filter %}<a class="tg-button secondary" href="{% url 'control:conversations' %}">Сбросить</a>{% endif %}
+  </form>
+  {% if not user.is_developer %}<div class="admin-warning">Обычные admin-роли видят метаданные. Forensic-содержимое и удалённые оригиналы доступны только developer.</div>{% endif %}
+  <section class="admin-panel">
+    <table class="admin-table"><thead><tr><th>Тип</th><th>Название</th><th>Участники</th><th>Сообщения</th><th>Последнее изменение</th><th>Режим</th><th></th></tr></thead>
+    <tbody>
+      {% for x in rows %}
+      <tr><td><span class="chat-kind-badge {{ x.kind }}">{{ x.get_kind_display }}</span></td><td><b>{{ x.title|default:"Личный чат" }}</b><div class="subtle">{{ x.pk }}</div></td><td>{{ x.member_count }}</td><td>{{ x.message_count }}</td><td>{{ x.updated_at|date:"d.m.Y H:i" }}</td><td>{% if x.is_archived %}archived{% else %}active{% endif %}</td><td>{% if user.is_developer %}<a class="tg-button secondary" href="{% url 'control:conversation_audit' x.pk %}">Forensic</a>{% else %}<span class="subtle">metadata</span>{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="7"><div class="tg-search-empty">Чаты не найдены.</div></td></tr>{% endfor %}
+    </tbody></table>
+  </section>
+</main></div>
+{% endblock %}

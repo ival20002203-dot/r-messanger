@@ -1,0 +1,35 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+db.sqlite3
+staticfiles/
+media/*
+!media/.gitkeep
+private_media/*
+!private_media/.gitkeep
+logs/*
+!logs/.gitkeep
+backups/
+.idea/
+.vscode/
+.DS_Store
+
+desktop/node_modules/
+desktop/dist/
+logs/*.log
+
+# Native client release artifacts are published separately on the server.
+client_updates/windows/*.exe
+client_updates/android/*.apk
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/android/RMes-*.apk
+
+# Provider/signing secrets
+secrets/*
+!secrets/.gitkeep
+mobile/android/app/google-services.json
+mobile/android/*.jks
+mobile/android/keystore.properties
+mobile/android/RMes-*.aab

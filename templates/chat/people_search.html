@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="modal-page"><section class="modal-card large">
+<a href="{% url 'chat:home' %}" class="modal-close">×</a>
+<h1>Контакты</h1><p class="subtle">Поиск по имени, корпоративной почте или @username.</p>
+<form class="searchbar"><input name="q" value="{{ q }}" placeholder="Начните вводить имя, email или username" autofocus><button class="tg-button primary">Найти</button></form>
+<div class="blocked-list">
+{% for x in rows %}
+<a class="blocked-user" href="{% url 'chat:open_user' x.pk %}">
+  <div class="tg-avatar tg-avatar-sm">{% if x.avatar_url %}<img src="{{ x.avatar_url }}" alt="">{% else %}<span>{{ x.initials }}</span>{% endif %}</div>
+  <div><b>{{ x.display_name }}</b><span>{% if x.handle %}@{{ x.handle }} · {% endif %}{{ x.email }}</span></div>
+  <span class="status-ok">{{ x.presence_status }}</span>
+</a>
+{% empty %}<div class="tg-search-empty">Введите имя или несколько букв.</div>{% endfor %}
+</div>
+</section></div>
+{% endblock %}

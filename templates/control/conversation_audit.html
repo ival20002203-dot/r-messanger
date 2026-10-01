@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main">
+  <div class="control-head"><div><h1>Forensic view чата</h1><p>{{ conversation.get_kind_display }} · {{ conversation.title|default:"Личный чат" }} · {{ conversation.pk }}</p></div><span class="developer-badge">DEVELOPER</span></div>
+  <div class="admin-warning">Здесь показывается сохранённый оригинал даже если пользователь удалил сообщение «у всех» или целый чат. Этот просмотр записывается в аудит.</div>
+  <form class="searchbar"><input name="q" value="{{ q }}" placeholder="Текст, имя или email"><button class="tg-button primary">Найти</button></form>
+
+  <section class="admin-panel">
+    <h2>События удаления чата</h2>
+    <table class="admin-table"><thead><tr><th>Когда</th><th>Действие</th><th>Кто</th><th>Scope</th><th>До ID</th><th>Затронуто</th><th>Developer protected</th></tr></thead>
+    <tbody>{% for d in deletions %}<tr><td>{{ d.created_at|date:"d.m.Y H:i:s" }}</td><td>{{ d.get_action_display }}</td><td>{{ d.actor.email|default:"—" }}</td><td>{{ d.get_scope_display }}</td><td>{{ d.through_message_id|default:"—" }}</td><td>{{ d.affected_user_ids }}</td><td>{{ d.protected_developer_ids }}</td></tr>{% empty %}<tr><td colspan="7">Нет удалений или очисток чата.</td></tr>{% endfor %}</tbody></table>
+  </section>
+
+  <section class="admin-panel">
+    <h2>Полная история сообщений</h2>
+    <table class="admin-table">
+      <thead><tr><th>ID</th><th>Время</th><th>Отправитель</th><th>Статус</th><th>Оригинальный текст</th><th>Скрыли только у себя</th><th>Редакции</th><th>Файлы</th></tr></thead>
+      <tbody>
+      {% for x in rows %}
+      <tr>
+        <td>{{ x.pk }}</td><td>{{ x.created_at|date:"d.m.Y H:i:s" }}</td><td>{{ x.sender.email|default:"—" }}</td>
+        <td>{% if x.is_deleted %}<span class="status-bad">DELETED FOR ALL</span>{% else %}<span class="status-ok">VISIBLE</span>{% endif %}</td>
+        <td class="wrap">{% if x.is_deleted %}<div class="forensic-original"><span class="forensic-tag">ORIGINAL</span><br>{{ x.body }}</div>{% else %}{{ x.body }}{% endif %}</td>
+        <td class="wrap">{% for h in x.hidden_for.all %}{{ h.user.email }}<br>{% empty %}—{% endfor %}</td>
+        <td class="wrap">{% for r in x.revisions.all %}<div><b>{{ r.created_at|date:"d.m H:i" }}</b>: {{ r.old_body|truncatechars:110 }} → {{ r.new_body|truncatechars:110 }}</div>{% empty %}—{% endfor %}</td>
+        <td>{% for a in x.attachments.all %}{% if a.scan_status == "safe" %}<a href="{{ a.file.url }}" target="_blank">{{ a.original_name }}</a>{% elif a.scan_status == "infected" %}<span class="status-bad">{{ a.original_name }} · BLOCKED · {{ a.scan_signature|default:"malware" }}</span>{% else %}<span class="subtle">{{ a.original_name }} · {{ a.scan_status }}</span>{% endif %}<br>{% empty %}—{% endfor %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main></div>
+{% endblock %}

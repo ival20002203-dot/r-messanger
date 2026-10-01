@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main">
+  <div class="control-head">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="tg-avatar">{% if target.avatar_url %}<img src="{{ target.avatar_url }}" alt="">{% else %}<span>{{ target.initials }}</span>{% endif %}</div>
+      <div><h1>{{ target.display_name }}</h1><p>{% if target.handle %}@{{ target.handle }} · {% endif %}{{ target.email }} · ID {{ target.pk }}</p></div>
+    </div>
+    {% if target.is_suspended %}<span class="status-bad">● PLATFORM BLOCKED</span>{% elif target.presence_hidden %}<span class="subtle">presence скрыт</span>{% elif target.presence_online %}<span class="status-ok">● ONLINE</span>{% else %}<span class="subtle">{{ target.presence_label }}</span>{% endif %}
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><span>Отправлено сообщений</span><b>{{ sent_count }}</b></div>
+    <div class="stat-card"><span>Удалено у всех</span><b>{{ deleted_sent }}</b></div>
+    <div class="stat-card"><span>Чатов</span><b>{{ memberships|length }}</b></div>
+    <div class="stat-card"><span>Активных API токенов</span><b>{{ tokens|length }}</b></div>
+    <div class="stat-card"><span>Статус</span><b>{% if target.presence_hidden %}СКРЫТ{% elif target.presence_online %}ONLINE{% else %}OFFLINE{% endif %}</b><small>{{ target.presence_label }}</small></div>
+  </div>
+
+  <section class="admin-panel">
+    <h2>Быстрые действия</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      {% if user.can_manage_users %}
+      <form method="post" action="{% url 'control:platform_toggle' target.pk %}">{% csrf_token %}
+        <button class="tg-button {% if target.is_suspended %}secondary{% else %}danger{% endif %}" {% if target.is_developer and not user.is_developer %}disabled{% endif %}>
+          {% if target.is_suspended %}Разблокировать на платформе{% else %}Заблокировать на платформе{% endif %}
+        </button>
+      </form>
+      <form method="post" action="{% url 'control:revoke_sessions' target.pk %}">{% csrf_token %}<button class="tg-button secondary">Завершить web-сессии</button></form>
+      <form method="post" action="{% url 'control:revoke_tokens' target.pk %}">{% csrf_token %}<button class="tg-button secondary">Отозвать API токены</button></form>
+      {% endif %}
+      {% if user.is_developer %}<a class="tg-button secondary" href="{% url 'control:forensics' %}?q={{ target.email|urlencode }}">Удалённые данные пользователя</a>{% endif %}
+    </div>
+  </section>
+
+  <section class="admin-panel">
+    <h2>Права и ограничения</h2>
+    {% if target.is_developer and not user.is_developer %}<div class="admin-warning">Developer-аккаунт защищён от изменения этой ролью.</div>{% endif %}
+    <form method="post" class="stack">{% csrf_token %}
+      <div class="permission-grid">{{ form.as_p }}</div>
+      {% if user.is_developer %}<button class="tg-button primary">Сохранить</button>{% elif user.can_manage_users and not target.is_developer and target.role != "superadmin" %}<button class="tg-button primary">Сохранить</button>{% endif %}
+    </form>
+  </section>
+
+  <section class="admin-panel">
+    <h2>Чаты пользователя</h2>
+    <table class="admin-table"><thead><tr><th>Чат</th><th>Тип</th><th>Скрыт</th><th>Архив</th><th>Скрыто до message ID</th><th></th></tr></thead>
+    <tbody>{% for m in memberships %}<tr><td>{{ m.conversation.title|default:"Личный чат" }}</td><td>{{ m.conversation.get_kind_display }}</td><td>{{ m.is_hidden }}</td><td>{{ m.is_archived }}</td><td>{{ m.hidden_before_message_id|default:"—" }}</td><td>{% if user.is_developer %}<a class="tg-button secondary" href="{% url 'control:conversation_audit' m.conversation.pk %}">Forensic</a>{% endif %}</td></tr>{% endfor %}</tbody></table>
+  </section>
+
+  <section class="admin-panel">
+    <h2>Блокировки пользователя</h2>
+    <div class="settings-grid">
+      <div><h3>Он заблокировал</h3>{% for x in blocks %}<div class="token-row"><span>{{ x.blocked.display_name }} · {{ x.blocked.email }}</span><span>{{ x.created_at|date:"d.m.Y H:i" }}</span></div>{% empty %}<div class="subtle">Нет</div>{% endfor %}</div>
+      <div><h3>Его заблокировали</h3>{% for x in blocked_by %}<div class="token-row"><span>{{ x.blocker.display_name }} · {{ x.blocker.email }}</span><span>{{ x.created_at|date:"d.m.Y H:i" }}</span></div>{% empty %}<div class="subtle">Нет</div>{% endfor %}</div>
+    </div>
+  </section>
+
+  <section class="admin-panel">
+    <h2>Последние входы</h2>
+    <table class="admin-table"><thead><tr><th>Время</th><th>IP</th><th>Результат</th><th>Причина</th><th>User-Agent</th></tr></thead>
+    <tbody>{% for x in login_rows %}<tr><td>{{ x.created_at|date:"d.m.Y H:i:s" }}</td><td>{{ x.ip_address|default:"—" }}</td><td>{% if x.successful %}<span class="status-ok">OK</span>{% else %}<span class="status-bad">FAIL</span>{% endif %}</td><td>{{ x.reason }}</td><td class="wrap">{{ x.user_agent|truncatechars:120 }}</td></tr>{% endfor %}</tbody></table>
+  </section>
+</main></div>
+{% endblock %}

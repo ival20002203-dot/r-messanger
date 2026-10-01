@@ -1,0 +1,9 @@
+R-Mes v8 validation summary
+================================
+- Branding refresh: OK
+- Desktop package.json JSON parse: OK
+- New migration 0008_artel_link_branding.py: OK
+- Desktop icon assets: OK
+- Reserved username catalogs regenerated: OK
+- Version updated to 8.0.0: OK
+- MSI / GPO build target configured: OK

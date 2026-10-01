@@ -1,0 +1,29 @@
+R-Mes v12.0.0 validation
+=============================
+
+Implemented:
+- accounts.0010_artel_link_app_lock migration
+- server-side hashed 4-8 digit PIN lock
+- manual lock + inactivity lock + Desktop launch lock
+- browser + Electron shared lock screen
+- unlock brute-force throttle
+- account-password confirmation for changing/removing PIN
+- Desktop default server http://10.10.10.130:8000
+- Desktop internal navigation stays in-app
+- Desktop server/startup/tray settings panel
+- Desktop tray Lock command
+- operations.0004_artel_link_v12_client_policy migration
+
+Static validation performed in build workspace:
+- python -m py_compile / compileall: PASS
+- node --check static/app.js: PASS
+- node --check desktop/main.js: PASS
+- node --check desktop/preload.js: PASS
+
+Runtime migration verification should be performed on the Ubuntu server with:
+  docker compose up -d --build
+  docker compose exec web python manage.py check
+  docker compose exec web python manage.py showmigrations accounts | tail -12
+
+Expected:
+  [X] 0010_artel_link_app_lock

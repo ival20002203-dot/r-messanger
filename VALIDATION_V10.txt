@@ -1,0 +1,43 @@
+R-Mes 10.0.0 — release validation
+========================================
+
+Static/release checks:
+- Python AST: OK (109 files)
+- Web JS syntax: OK
+- Desktop JS syntax: OK
+- k6 JS syntax: OK
+- desktop/package.json: OK
+- Docker Compose YAML: OK
+- GitLab CI YAML: OK
+- CSS parser: OK
+- SVG/XML: OK
+- Django template block structure: OK (41 templates)
+- Migration dependency graph: OK
+- Product version 10.0.0: OK
+- Windows product name R-Mes: OK
+- Installer artifact naming ArtelLink-*: OK
+- Stable Windows appId preserved for upgrades: OK
+- artellink:// deep-link scheme: OK
+- Official Artel logo assets included: OK
+- Official Artel green accent: OK
+- No user-facing Localgram text in desktop/templates: OK
+- Telegram-style settings redesign retained: OK
+- Voice immediate playback while scan runs: OK
+- Voice extra moderation queue bypass: OK
+- Call recording notice: OK
+- Single-side (caller) call recording to avoid duplicates: OK
+- Call recording upload to chat: OK
+- Public STUN hardcode removed: OK
+- Internal/configurable RTC ICE: OK
+- Client policy defaults moved to 10.0.0: OK
+- MSI/GPO target: OK
+- Windows build scripts: OK
+
+Errors: 0
+Warnings: 0
+
+Runtime limitations of this artifact environment:
+- Django and the full project dependencies are not installed here, so manage.py check/migrate/test were not executed in this environment.
+- Docker runtime is not available here, so containers were not built/started.
+- npm registry access is unavailable from this artifact environment, so Electron dependencies could not be downloaded and the final Windows EXE/MSI binary could not be compiled here.
+- The included desktop source/config/icons/build scripts are ready for the existing Windows Node/npm environment. Run desktop\build_windows.cmd or desktop\build_windows.ps1 to produce ArtelLink-10.0.0-Setup.exe and the MSI build.

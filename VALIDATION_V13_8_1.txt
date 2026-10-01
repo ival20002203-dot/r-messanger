@@ -1,0 +1,23 @@
+R-Mes 13.8.2 validation
+Date: 2026-09-10
+
+PASS: Django system check identified no issues.
+PASS: 37 Django tests passed.
+PASS: Presence remains online with one of two windows closed and falls offline after the last window closes.
+PASS: Presence falls back to the database when Redis operations raise an error.
+PASS: Server payload has canonical ISO timestamp and millisecond timestamp per message.
+PASS: Incoming call offer -> answer -> caller poll integration test.
+PASS: WebSocket/HTTP call signaling is idempotent; media is forced to audio.
+PASS: Developer-only moderation live endpoint and failed-job retry integration test.
+PASS: Moderation page contains no automatic page reload; live rows update every 2 seconds.
+PASS: Regular users receive HTTP 403 for the developer-only moderation endpoint.
+PASS: Node syntax check for static/app.js, static/chat.js and desktop/main.js.
+PASS: Bash syntax check for scripts/release_13_8_1.sh.
+PASS: No video-call control or video-call signaling is present.
+
+Production-only checks after deployment:
+1. Confirm host NTP reports synchronized and timezone Asia/Tashkent.
+2. Confirm moderator, web, Redis, PostgreSQL and coturn containers are running.
+3. Confirm external firewall/NAT permits TCP/UDP 3478 and UDP 49160-49200.
+4. Send an authorized test image/video and confirm: В очереди -> Обработка -> Готово/СРАБОТАЛО.
+5. Place a two-user audio call from separate workstations and confirm accept/reject, sound and microphone permissions.

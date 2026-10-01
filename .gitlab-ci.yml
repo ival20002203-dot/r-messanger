@@ -1,0 +1,111 @@
+stages: [lint,test,build,security,deploy]
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  POSTGRES_DB: localgram_test
+  POSTGRES_USER: localgram
+  POSTGRES_PASSWORD: localgram_test_password
+  POSTGRES_HOST: db
+  POSTGRES_PORT: "5432"
+  REDIS_URL: redis://redis:6379/0
+  SECRET_KEY: gitlab-ci-not-production-secret-key
+  DEBUG: "1"
+  USE_S3_STORAGE: "0"
+  EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
+  CORP_EMAIL_DOMAINS: texnopark.uz,artelelectronics.com
+
+cache:
+  paths: [.cache/pip]
+
+lint:python:
+  stage: lint
+  image: python:3.12-slim
+  variables:
+    POSTGRES_HOST: ""
+    REDIS_URL: ""
+  script:
+    - python -m compileall -q apps localgram
+    - pip install -r requirements-test.txt
+    - python manage.py makemigrations --check --dry-run
+
+lint:javascript:
+  stage: lint
+  image: node:22-alpine
+  script:
+    - node --check static/app.js
+    - node --check static/chat.js
+    - node --check desktop/main.js
+    - node --check desktop/preload.js
+    - node -e "JSON.parse(require('fs').readFileSync('desktop/package.json','utf8'))"
+
+test:django:
+  stage: test
+  image: python:3.12-slim
+  services:
+    - name: postgres:17-alpine
+      alias: db
+    - name: redis:7.4-alpine
+      alias: redis
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends libpq5 && rm -rf /var/lib/apt/lists/*
+    - pip install -r requirements-test.txt
+  script:
+    - python manage.py migrate --noinput
+    - python manage.py check
+    - python manage.py test apps.accounts.tests_v7 apps.chat.tests_v7 apps.securitycenter.tests_v7 apps.operations.tests --verbosity=2
+
+build:image:
+  stage: build
+  image: docker:27
+  services: [docker:27-dind]
+  variables: {DOCKER_TLS_CERTDIR: "/certs"}
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  script:
+    - docker build -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA" .
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+
+security:trivy:
+  stage: security
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  script:
+    - trivy image --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD" --exit-code 1 --severity CRITICAL --ignore-unfixed "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+  needs: ["build:image"]
+
+deploy:staging:
+  stage: deploy
+  image: alpine:3.20
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$STAGING_SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - test -n "$STAGING_SSH_KNOWN_HOSTS"
+    - printf '%s\n' "$STAGING_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh/known_hosts
+  script:
+    - ssh "$STAGING_SSH_USER@$STAGING_SSH_HOST" "cd /opt/localgram && git pull --ff-only && docker compose -f docker-compose.prod.yml up -d --build && ./scripts/doctor_linux.sh"
+  environment: {name: staging}
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" && $STAGING_SSH_HOST'
+      when: manual
+
+deploy:production:
+  stage: deploy
+  image: alpine:3.20
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$PROD_SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - test -n "$PROD_SSH_KNOWN_HOSTS"
+    - printf '%s\n' "$PROD_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh/known_hosts
+  script:
+    - ssh "$PROD_SSH_USER@$PROD_SSH_HOST" "cd /opt/localgram && ./scripts/backup_linux.sh && git pull --ff-only && docker compose -f docker-compose.prod.yml up -d --build && ./scripts/doctor_linux.sh"
+  environment: {name: production}
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $PROD_SSH_HOST'
+      when: manual

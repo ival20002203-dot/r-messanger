@@ -1,0 +1,79 @@
+{% load static %}
+<!doctype html>
+<html lang="{{ CURRENT_LANGUAGE|default:'ru' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#229ED9">
+  <link rel="icon" type="image/png" href="{% static 'rmes-icon.png' %}">
+  <title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'app.css' %}?v={{ APP_VERSION|urlencode }}">
+</head>
+<body data-language="{{ CURRENT_LANGUAGE|default:'ru' }}" data-theme="{% if USER_PREF %}{{ USER_PREF.theme }}{% else %}dark{% endif %}" data-accent="{% if USER_PREF %}{{ USER_PREF.accent_color }}{% else %}blue{% endif %}" data-chat-background="{% if USER_PREF %}{{ USER_PREF.chat_background }}{% else %}rmes{% endif %}" data-font-scale="{% if USER_PREF %}{{ USER_PREF.font_scale }}{% else %}100{% endif %}" data-app-lock-enabled="{% if USER_PREF and USER_PREF.app_lock_enabled %}1{% else %}0{% endif %}" data-app-lock-timeout="{% if USER_PREF %}{{ USER_PREF.app_lock_timeout_minutes }}{% else %}0{% endif %}" class="{% if USER_PREF.compact_mode %}compact-mode {% endif %}{% if USER_PREF and not USER_PREF.animations_enabled %}reduce-motion {% endif %}{% if IS_DESKTOP_APP %}desktop-app{% elif IS_ANDROID_APP %}mobile-app android-app{% elif IS_IOS_APP %}mobile-app ios-app{% else %}web-app{% endif %}">
+  {% if CLIENT_UPDATE %}
+  <div class="client-update-banner {% if CLIENT_UPDATE.force_update %}force{% endif %}" id="clientUpdateBanner" data-platform="{{ CLIENT_UPDATE.platform|escape }}" data-current-version="{{ CLIENT_UPDATE.current_version|escape }}" data-update-url="{{ CLIENT_UPDATE.update_url|escape }}" data-update-sha256="{{ CLIENT_UPDATE.sha256|escape }}" data-latest-version="{{ CLIENT_UPDATE.latest_version|escape }}" data-ready="{% if CLIENT_UPDATE.ready %}1{% else %}0{% endif %}">
+    <div><b>Доступно обновление R-Messanger {{ CLIENT_UPDATE.latest_version }}</b><span class="client-update-note">{% if CLIENT_UPDATE.ready %}{% if CLIENT_UPDATE.release_notes %}{{ CLIENT_UPDATE.release_notes|truncatechars:120 }}{% else %}Пакет обновления готов к установке.{% endif %}{% else %}Версия объявлена, но установщик ещё не опубликован на сервере.{% endif %}</span></div>
+    {% if CLIENT_UPDATE.ready %}<button type="button" id="clientUpdateBtn">Обновить</button>{% else %}<span class="client-update-preparing">Ожидает файла</span>{% endif %}
+  </div>
+  {% endif %}
+  {% if messages %}
+  <div class="toasts">{% for message in messages %}<div class="toast {{ message.tags }}">{{ message }}</div>{% endfor %}</div>
+  {% endif %}
+  {% block content %}{% endblock %}
+  {% if user.is_authenticated %}
+  <script>
+  window.R_MES_GLOBAL = {
+    searchUrl: "{% url 'chat:search_suggest' %}",
+    notificationUrl: "{% url 'chat:notifications_api' %}",
+    notificationReadAllUrl: "{% url 'chat:notifications_read_all' %}",
+    sidebarStateUrl: "{% url 'chat:sidebar_state_api' %}",
+    callSignalUrl: "{% url 'chat:call_signal_api' %}",
+    callPollUrl: "{% url 'chat:call_poll_api' %}",
+    currentFolder: "{{ folder|default:'all'|escapejs }}",
+    presenceUrl: "{% url 'accounts:presence_api' %}",
+    presenceBatchUrl: "{% url 'accounts:presence_batch_api' %}",
+    pushTokenUrl: "{% url 'accounts:push_token_api' %}",
+    languageUrl: "{% url 'accounts:language_api' %}",
+    language: "{{ CURRENT_LANGUAGE|default:'ru'|escapejs }}",
+    iconsUrl: "{% static 'icons.svg' %}",
+    userId: {{ user.id }},
+    isDeveloper: {% if user.is_developer %}true{% else %}false{% endif %},
+    currentConversationId: "{% if conversation %}{{ conversation.pk }}{% endif %}",
+    currentPeerId: "{% if peer %}{{ peer.pk }}{% endif %}",
+    currentPeerName: "{% if peer %}{{ peer.display_name|escapejs }}{% endif %}",
+    currentPeerAvatar: "{% if peer %}{{ peer.avatar_url|escapejs }}{% endif %}",
+    rtcIceServers: {{ RTC_ICE_SERVERS_JSON|safe }},
+    appVersion: "{{ APP_VERSION|escapejs }}",
+    serverTimeZone: "{{ SERVER_TIME_ZONE|escapejs }}",
+    serverNow: "{{ SERVER_NOW_ISO|escapejs }}",
+    desktopNotifications: {% if USER_PREF and USER_PREF.desktop_notifications %}true{% else %}false{% endif %},
+    notificationSound: {% if USER_PREF and USER_PREF.notification_sound %}true{% else %}false{% endif %},
+    showMessagePreview: {% if USER_PREF and USER_PREF.show_message_preview %}true{% else %}false{% endif %},
+    showSenderName: {% if USER_PREF and USER_PREF.show_sender_name %}true{% else %}false{% endif %},
+    notifyDirectChats: {% if USER_PREF and USER_PREF.notify_direct_chats %}true{% else %}false{% endif %},
+    notifyGroups: {% if USER_PREF and USER_PREF.notify_groups %}true{% else %}false{% endif %},
+    notifyChannels: {% if USER_PREF and USER_PREF.notify_channels %}true{% else %}false{% endif %},
+    suppressActiveChatNotifications: {% if USER_PREF and USER_PREF.suppress_active_chat_notifications %}true{% else %}false{% endif %}
+  };
+  </script>
+  {% endif %}
+  {% if user.is_authenticated %}
+  <div class="global-call-overlay hidden" id="globalIncomingCall">
+    <div class="global-call-card">
+      <div class="global-call-app"><img src="{% static 'rmes-icon.png' %}" alt="R-Messanger"><span>R-Messanger</span></div>
+      <div class="tg-avatar global-call-avatar" id="globalCallAvatar"><span>?</span></div>
+      <h2 id="globalCallName">Входящий звонок</h2>
+      <p id="globalCallType">Входящий аудиозвонок</p>
+      <div class="global-call-actions">
+        <button type="button" class="global-call-btn reject" id="globalCallReject" title="Отклонить">✕</button>
+        <button type="button" class="global-call-btn accept" id="globalCallAccept" title="Ответить">✓</button>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  <div class="rmes-network-status hidden" id="rmesNetworkStatus" aria-live="polite"></div>
+  <script src="{% static 'i18n.js' %}?v={{ APP_VERSION|urlencode }}"></script>
+  <script src="{% static 'app.js' %}?v={{ APP_VERSION|urlencode }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

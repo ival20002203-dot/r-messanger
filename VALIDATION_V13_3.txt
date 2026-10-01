@@ -1,0 +1,26 @@
+R-Mes 13.3.0 validation
+============================
+
+Validated in artifact environment:
+- Python source syntax/compile: PASS
+- static/app.js syntax: PASS (node --check)
+- static/chat.js syntax: PASS (node --check)
+- desktop/main.js syntax: PASS (node --check)
+- desktop/preload.js syntax: PASS (node --check)
+- desktop/notification-preload.js syntax: PASS (node --check)
+- desktop/package.json parse/version: PASS (13.3.0)
+- docker-compose.yml YAML parse: PASS, coturn service present
+- docker-compose.prod.yml YAML parse: PASS, coturn service present
+- custom R-Mes desktop notification window present
+- exact chat unread resync payload present
+- global /ws/app/ call relay present
+- v13.3 client policy migration present
+- presentation check/firewall helper scripts present
+
+Requires final runtime verification on the user's Ubuntu server:
+- Django `manage.py check` and migrations against PostgreSQL/Redis
+- coturn container startup and firewall reachability
+- two-PC microphone/camera WebRTC test
+- Windows Electron installer build and branded popup behavior
+
+No .env secrets or signing keys are included in the archive.

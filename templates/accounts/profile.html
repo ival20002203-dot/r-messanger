@@ -1,0 +1,413 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Настройки — {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="telegram-settings" id="telegramSettings">
+  <aside class="telegram-settings-sidebar">
+    <div class="settings-topbar">
+      <a href="{% url 'chat:home' %}" class="settings-back" title="Назад"><svg><use href="{% static 'icons.svg' %}#back"></use></svg></a>
+      <b>Настройки</b>
+    </div>
+
+    <div class="settings-profile-head" data-settings-target="account">
+      <div class="tg-avatar settings-profile-avatar" id="navAvatar">
+        {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="">{% else %}<span>{{ user.initials }}</span>{% endif %}
+      </div>
+      <div class="settings-profile-copy">
+        <strong id="navDisplayName">{{ user.display_name }}</strong>
+        <span>{{ user.email }}</span>
+        <small id="navUsername">{% if user.handle %}@{{ user.handle }}{% else %}Добавьте @username{% endif %}</small>
+      </div>
+      <span class="settings-qr">⌘</span>
+    </div>
+
+    <nav class="telegram-settings-menu">
+      <button class="settings-menu-row active" type="button" data-settings-target="account"><svg><use href="{% static 'icons.svg' %}#user"></use></svg><span>Мой аккаунт</span><em>›</em></button>
+      <button class="settings-menu-row" type="button" data-settings-target="notifications"><svg><use href="{% static 'icons.svg' %}#bell"></use></svg><span>Уведомления и звуки</span><em>›</em></button>
+      <button class="settings-menu-row" type="button" data-settings-target="privacy"><svg><use href="{% static 'icons.svg' %}#lock"></use></svg><span>Конфиденциальность</span><em>›</em></button>
+      <button class="settings-menu-row" type="button" data-settings-target="chats"><svg><use href="{% static 'icons.svg' %}#smile"></use></svg><span>Настройки чатов</span><em>›</em></button>
+      <a class="settings-menu-row" href="{% url 'chat:folder_settings' %}"><svg><use href="{% static 'icons.svg' %}#archive"></use></svg><span>Папки с чатами</span><em>›</em></a>
+      <button class="settings-menu-row" type="button" data-settings-target="advanced"><svg><use href="{% static 'icons.svg' %}#settings"></use></svg><span>Продвинутые настройки</span><em>›</em></button>
+      <button class="settings-menu-row" type="button" data-settings-target="media"><svg><use href="{% static 'icons.svg' %}#mic"></use></svg><span>Звук и микрофон</span><em>›</em></button>
+      <button class="settings-menu-row" type="button" data-settings-target="power"><svg><use href="{% static 'icons.svg' %}#check"></use></svg><span>Анимация и производительность</span><em>›</em></button>
+      {% if IS_DESKTOP_APP %}<button class="settings-menu-row" type="button" data-settings-target="desktop"><svg><use href="{% static 'icons.svg' %}#settings"></use></svg><span>Приложение</span><small>Desktop</small><em>›</em></button>{% endif %}
+      <button class="settings-menu-row" type="button" data-settings-target="language"><span class="settings-text-icon">Я</span><span>Язык</span><small>Русский</small><em>›</em></button>
+      <button class="settings-menu-row" type="button" data-settings-target="scale"><svg><use href="{% static 'icons.svg' %}#info"></use></svg><span>Масштаб интерфейса</span><small id="scaleSidebarValue">{{ USER_PREF.font_scale }}%</small><em>›</em></button>
+    </nav>
+
+    {% if user.is_control_admin %}
+      <a class="settings-admin-link" href="{% url 'control:dashboard' %}"><svg><use href="{% static 'icons.svg' %}#shield"></use></svg>Control Center</a>
+    {% endif %}
+  </aside>
+
+  <main class="telegram-settings-content">
+    <div class="settings-content-bar">
+      <button class="settings-mobile-back" type="button">‹</button>
+      <div><b id="settingsPanelTitle">Мой аккаунт</b><span>R-Messanger</span></div>
+      <span class="settings-save-indicator" id="settingsSaveIndicator">Сохранено</span>
+    </div>
+
+    <section class="settings-panel active" data-settings-panel="account">
+      <form id="profileForm" method="post" enctype="multipart/form-data" action="{% url 'accounts:profile_save_api' %}">{% csrf_token %}
+        <div class="telegram-profile-card">
+          <div class="tg-avatar telegram-profile-avatar" id="avatarPreview">
+            {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="">{% else %}<span>{{ user.initials }}</span>{% endif %}
+          </div>
+          <div class="telegram-profile-name"><h2>{{ user.display_name }}</h2><p>{{ user.email }}</p></div>
+          <div class="telegram-avatar-actions">
+            {{ profile_form.avatar }}
+            <label for="{{ profile_form.avatar.id_for_label }}" class="settings-link-button">Изменить фото</label>
+            <button type="button" class="settings-link-button muted-action {% if not user.avatar %}hidden{% endif %}" id="removeAvatarBtn">Удалить</button>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-group-title">Профиль</div>
+          <label class="settings-field-row"><span>Имя в R-Messanger</span>{{ profile_form.display_name }}<small data-error-for="display_name"></small></label>
+          <label class="settings-field-row username-setting"><span>Имя пользователя</span><div class="username-input-wrap"><i>@</i>{{ profile_form.handle }}</div><small id="usernameAvailability">По нему вас смогут находить сотрудники</small><small data-error-for="handle"></small></label>
+          <label class="settings-field-row"><span>Имя</span>{{ profile_form.first_name }}<small data-error-for="first_name"></small></label>
+          <label class="settings-field-row"><span>Фамилия</span>{{ profile_form.last_name }}<small data-error-for="last_name"></small></label>
+          <label class="settings-field-row settings-field-textarea"><span>О себе</span>{{ profile_form.bio }}<small data-error-for="bio"></small></label>
+        </div>
+      </form>
+
+      <div class="settings-group">
+        <button class="settings-action-row" type="button" data-settings-target="devices"><svg><use href="{% static 'icons.svg' %}#lock"></use></svg><div><b>Устройства</b><span>Активные входы и клиенты</span></div><em>›</em></button>
+        <button class="settings-action-row" type="button" data-settings-target="blocked"><svg><use href="{% static 'icons.svg' %}#block"></use></svg><div><b>Заблокированные</b><span>Управление списком блокировок</span></div><em>›</em></button>
+      </div>
+      <div class="settings-group settings-danger-group"><a class="settings-action-row danger-item" href="{% url 'accounts:logout' %}"><svg><use href="{% static 'icons.svg' %}#back"></use></svg><div><b>Выйти</b><span>Завершить текущую сессию</span></div></a></div>
+    </section>
+
+      <section class="settings-panel" data-settings-panel="privacy">
+        <div class="settings-group">
+          <div class="settings-group-title">Доступ</div>
+          <div class="settings-info-row"><svg><use href="{% static 'icons.svg' %}#check"></use></svg><div><b>Корпоративная почта</b><span>{{ user.email }}</span></div><strong>Подтверждена</strong></div>
+          <div class="settings-info-row"><svg><use href="{% static 'icons.svg' %}#lock"></use></svg><div><b>Проверка входа по почте</b><span>Дополнительный код при входе</span></div><strong>{% if login_2fa_enabled %}Включена{% else %}Выключена{% endif %}</strong></div>
+        </div>
+        <div class="settings-group presence-privacy-card">
+          <div class="settings-group-title">Время посещения и «в сети»</div>
+          <label class="settings-field-row presence-main-select">
+            <span>Кто видит моё точное время</span>
+            <select id="lastSeenPrivacy" data-url="{% url 'accounts:presence_privacy_api' %}">
+              <option value="everybody" {% if last_seen_privacy == 'everybody' %}selected{% endif %}>Все пользователи</option>
+              <option value="recently" {% if last_seen_privacy == 'recently' %}selected{% endif %}>Никто — показывать «был(а) недавно»</option>
+              {% if user.is_developer %}<option value="nobody" {% if last_seen_privacy == 'nobody' %}selected{% endif %}>Скрыть полностью (только Developer)</option>{% endif %}
+            </select>
+            <small>Обычные пользователи не могут полностью скрыть время: доступно точное отображение или Telegram-режим «был(а) недавно». Developer всегда видит технически точный статус всех пользователей.</small>
+          </label>
+          <div class="presence-exception-list">
+            <button class="presence-exception-head" type="button" data-open-presence-picker="always">
+              <div><b>Всегда показывать</b><span>Эти пользователи увидят точное время, даже если выбран режим «недавно».</span></div><em>Добавить</em>
+            </button>
+            <div class="presence-exception-users" id="presenceAlwaysList">
+              {% for row in presence_always %}<div class="presence-exception-user" data-presence-target="{{ row.target_id }}"><div class="tg-avatar tg-avatar-sm">{% if row.target.avatar_url %}<img src="{{ row.target.avatar_url }}" alt="">{% else %}<span>{{ row.target.initials }}</span>{% endif %}</div><div><b>{{ row.target.display_name }}</b><span>{% if row.target.handle %}@{{ row.target.handle }}{% else %}{{ row.target.email }}{% endif %}</span></div><button type="button" title="Удалить исключение" data-remove-presence-rule="{{ row.target_id }}">×</button></div>{% empty %}<div class="presence-exception-empty">Исключений нет</div>{% endfor %}
+            </div>
+          </div>
+          <div class="presence-exception-list">
+            <button class="presence-exception-head" type="button" data-open-presence-picker="except">
+              <div><b>Показывать «недавно» для…</b><span>Эти пользователи не увидят точное время и настоящий online.</span></div><em>Добавить</em>
+            </button>
+            <div class="presence-exception-users" id="presenceExceptList">
+              {% for row in presence_except %}<div class="presence-exception-user" data-presence-target="{{ row.target_id }}"><div class="tg-avatar tg-avatar-sm">{% if row.target.avatar_url %}<img src="{{ row.target.avatar_url }}" alt="">{% else %}<span>{{ row.target.initials }}</span>{% endif %}</div><div><b>{{ row.target.display_name }}</b><span>{% if row.target.handle %}@{{ row.target.handle }}{% else %}{{ row.target.email }}{% endif %}</span></div><button type="button" title="Удалить исключение" data-remove-presence-rule="{{ row.target_id }}">×</button></div>{% empty %}<div class="presence-exception-empty">Исключений нет</div>{% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="settings-group password-settings-group">
+          <div class="settings-group-title">Пароль</div>
+          <form method="post" class="settings-password-form">{% csrf_token %}<input type="hidden" name="action" value="password">{{ password_form.as_p }}<button class="tg-button primary">Изменить пароль</button></form>
+        </div>
+        <div class="settings-group" id="appLockSettingsGroup">
+          <div class="settings-group-title">Код-пароль R-Messanger</div>
+          <div class="settings-info-row"><svg><use href="{% static 'icons.svg' %}#lock"></use></svg><div><b>Блокировка приложения и браузера</b><span>Один отдельный PIN для R-Messanger. PIN хранится на сервере только в виде хеша.</span></div><span class="app-lock-state {% if not app_lock_enabled %}off{% endif %}" id="appLockState">{% if app_lock_enabled %}Включено{% else %}Выключено{% endif %}</span></div>
+          <form class="app-lock-settings" id="appLockSettingsForm" action="{% url 'accounts:app_lock_settings' %}" method="post" autocomplete="off">{% csrf_token %}
+            <label class="telegram-toggle-row" style="padding-left:0;padding-right:0"><div><b>Использовать код-пароль</b><span>Блокирует текущую сессию без выхода из аккаунта</span></div><input id="appLockEnabled" type="checkbox" name="enabled" {% if app_lock_enabled %}checked{% endif %}></label>
+            <div class="app-lock-settings-grid">
+              <label class="full"><span>Текущий пароль учётной записи</span><input type="password" name="current_password" autocomplete="current-password" required placeholder="Нужен для изменения настройки"></label>
+              <label><span>{% if app_lock_enabled %}Новый PIN (необязательно){% else %}Новый PIN{% endif %}</span><input type="password" name="code" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password" placeholder="4–8 цифр"></label>
+              <label><span>Повторите PIN</span><input type="password" name="code_confirm" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password" placeholder="Повтор PIN"></label>
+              <label><span>Автоблокировка</span><select name="timeout_minutes" id="appLockTimeout">
+                <option value="0" {% if app_lock_timeout_minutes == 0 %}selected{% endif %}>Только вручную</option>
+                <option value="1" {% if app_lock_timeout_minutes == 1 %}selected{% endif %}>Через 1 минуту</option>
+                <option value="5" {% if app_lock_timeout_minutes == 5 %}selected{% endif %}>Через 5 минут</option>
+                <option value="15" {% if app_lock_timeout_minutes == 15 %}selected{% endif %}>Через 15 минут</option>
+                <option value="30" {% if app_lock_timeout_minutes == 30 %}selected{% endif %}>Через 30 минут</option>
+                <option value="60" {% if app_lock_timeout_minutes == 60 %}selected{% endif %}>Через 1 час</option>
+              </select></label>
+              <div><span style="display:block;color:var(--muted);font-size:10px;margin-bottom:5px">Desktop</span><label class="telegram-toggle-row" style="padding:7px 0;border:0"><div><b>При каждом запуске</b><span>Сразу просить PIN после открытия приложения</span></div><input type="checkbox" name="lock_on_start" id="appLockOnStart" {% if app_lock_lock_on_start %}checked{% endif %}></label></div>
+            </div>
+            <div class="app-lock-settings-actions"><button class="tg-button primary" type="submit">Сохранить</button>{% if app_lock_enabled %}<button class="settings-secondary-button" type="button" id="appLockNowBtn">Заблокировать сейчас</button>{% endif %}</div>
+            <div class="app-lock-inline-error" id="appLockSettingsError"></div><div class="app-lock-inline-success" id="appLockSettingsSuccess"></div>
+          </form>
+        </div>
+      </section>
+
+
+    <form id="preferenceForm" method="post" action="{% url 'accounts:preferences_save_api' %}">{% csrf_token %}
+      <section class="settings-panel" data-settings-panel="notifications">
+        <div class="settings-group">
+          <div class="settings-group-title">Сообщения</div>
+          <label class="telegram-toggle-row"><div><b>Уведомления рабочего стола</b><span>Системные уведомления Windows, когда R-Messanger не в фокусе</span></div>{{ preference_form.desktop_notifications }}</label>
+          <label class="telegram-toggle-row"><div><b>Звук новых сообщений</b><span>Короткий сигнал при новом сообщении</span></div>{{ preference_form.notification_sound }}</label>
+          <label class="telegram-toggle-row"><div><b>Показывать имя отправителя</b><span>Если выключено — в заголовке будет только R-Messanger</span></div>{{ preference_form.show_sender_name }}</label>
+          <label class="telegram-toggle-row"><div><b>Предпросмотр сообщения</b><span>Если выключено — текст сообщения скрыт</span></div>{{ preference_form.show_message_preview }}</label>
+          <label class="telegram-toggle-row"><div><b>Не уведомлять в открытом чате</b><span>Не показывать баннер и звук, когда вы прямо сейчас читаете этот чат</span></div>{{ preference_form.suppress_active_chat_notifications }}</label>
+          <div class="settings-device-test"><svg><use href="{% static 'icons.svg' %}#bell"></use></svg><div><b>Проверка уведомлений</b><span id="desktopNotificationPermission">Проверить системное уведомление</span></div><button type="button" class="settings-link-button" id="testDesktopNotification">Проверить</button></div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-title">Уведомлять о сообщениях</div>
+          <label class="telegram-toggle-row"><div><b>Личные чаты</b><span>Новые сообщения от сотрудников</span></div>{{ preference_form.notify_direct_chats }}</label>
+          <label class="telegram-toggle-row"><div><b>Группы</b><span>Новые сообщения в групповых чатах</span></div>{{ preference_form.notify_groups }}</label>
+          <label class="telegram-toggle-row"><div><b>Каналы</b><span>Новые публикации в каналах</span></div>{{ preference_form.notify_channels }}</label>
+        </div>
+      </section>
+
+      <section class="settings-panel" data-settings-panel="chats">
+        <div class="settings-group">
+          <div class="settings-group-title">Тема</div>
+          <div class="theme-preview-grid">
+            <label class="theme-preview-card {% if USER_PREF.theme == 'system' %}selected{% endif %}"><input type="radio" name="pref-theme" value="system" {% if USER_PREF.theme == 'system' %}checked{% endif %}><span class="theme-preview theme-system"><i></i><b></b><em></em></span><strong>Системная</strong></label>
+            <label class="theme-preview-card {% if USER_PREF.theme == 'light' %}selected{% endif %}"><input type="radio" name="pref-theme" value="light" {% if USER_PREF.theme == 'light' %}checked{% endif %}><span class="theme-preview theme-light"><i></i><b></b><em></em></span><strong>Дневная</strong></label>
+            <label class="theme-preview-card {% if USER_PREF.theme == 'tinted' %}selected{% endif %}"><input type="radio" name="pref-theme" value="tinted" {% if USER_PREF.theme == 'tinted' %}checked{% endif %}><span class="theme-preview theme-tinted"><i></i><b></b><em></em></span><strong>Цветная</strong></label>
+            <label class="theme-preview-card {% if USER_PREF.theme == 'dark' %}selected{% endif %}"><input type="radio" name="pref-theme" value="dark" {% if USER_PREF.theme == 'dark' %}checked{% endif %}><span class="theme-preview theme-dark"><i></i><b></b><em></em></span><strong>Ночная</strong></label>
+          </div>
+          <div class="accent-swatches" id="accentSwatches">
+            {% for value,label in preference_form.accent_color.field.choices %}
+              <label class="accent-swatch accent-{{ value }} {% if USER_PREF.accent_color == value %}selected{% endif %}" title="{{ label }}"><input type="radio" name="pref-accent_color" value="{{ value }}" {% if USER_PREF.accent_color == value %}checked{% endif %}><span></span></label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-title">Оформление чата</div>
+          <div class="chat-background-grid">
+            {% for value,label in preference_form.chat_background.field.choices %}
+            <label class="chat-bg-option bg-{{ value }} {% if USER_PREF.chat_background == value %}selected{% endif %}"><input type="radio" name="pref-chat_background" value="{{ value }}" {% if USER_PREF.chat_background == value %}checked{% endif %}><span></span><b>{{ label }}</b></label>
+            {% endfor %}
+          </div>
+          <label class="telegram-toggle-row"><div><b>Компактный режим</b><span>Больше чатов и сообщений на экране</span></div>{{ preference_form.compact_mode }}</label>
+          <label class="telegram-toggle-row"><div><b>Enter отправляет сообщение</b><span>Если выключено — Ctrl+Enter</span></div>{{ preference_form.enter_to_send }}</label>
+        </div>
+      </section>
+
+      <section class="settings-panel" data-settings-panel="advanced">
+        <div class="settings-group">
+          <div class="settings-group-title">Данные и загрузки</div>
+          <label class="telegram-toggle-row"><div><b>Автозагрузка изображений</b><span>Показывать изображения сразу</span></div>{{ preference_form.auto_download_images }}</label>
+          <label class="telegram-toggle-row"><div><b>Автозагрузка файлов</b><span>Автоматически загружать вложения</span></div>{{ preference_form.auto_download_files }}</label>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-title">Горячие клавиши</div>
+          <div class="shortcut-list"><div><kbd>Esc</kbd><span>Закрыть меню или чат</span></div><div><kbd>Ctrl+F</kbd><span>Поиск в чате</span></div><div><kbd>Ctrl+K</kbd><span>Глобальный поиск</span></div><div><kbd>Alt+←</kbd><span>Вернуться назад</span></div></div>
+        </div>
+      </section>
+
+      <section class="settings-panel" data-settings-panel="media">
+        <div class="settings-group">
+          <div class="settings-group-title">Устройства</div>
+          <div class="settings-device-test"><svg><use href="{% static 'icons.svg' %}#mic"></use></svg><div><b>Микрофон</b><span id="microphoneStatus">Нажмите, чтобы проверить доступ</span></div><button type="button" class="settings-link-button" id="testMicrophone">Проверить</button></div>
+        </div>
+        <div class="settings-group"><div class="settings-note">Голосовые сообщения и аудиозвонки используют системный микрофон. В Desktop-клиенте разрешение остаётся внутри R-Messanger и не открывает браузер.</div></div>
+      </section>
+
+      <section class="settings-panel" data-settings-panel="power">
+        <div class="settings-group">
+          <div class="settings-group-title">Производительность</div>
+          <label class="telegram-toggle-row"><div><b>Анимации интерфейса</b><span>Плавные переходы, панели и сообщения</span></div>{{ preference_form.animations_enabled }}</label>
+          <label class="telegram-toggle-row"><div><b>Анимированные emoji</b><span>Динамические реакции и emoji</span></div>{{ preference_form.animated_emoji }}</label>
+        </div>
+      </section>
+
+      {% if IS_DESKTOP_APP %}
+      <section class="settings-panel" data-settings-panel="desktop">
+        <div class="settings-group">
+          <div class="settings-group-title">R-Messanger Desktop</div>
+          <div class="app-lock-settings">
+            <div class="app-lock-settings-grid">
+              <label class="full"><span>Адрес сервера</span><input id="desktopServerUrl" type="url" value="http://127.0.0.1:8000" spellcheck="false"></label>
+            </div>
+            <label class="telegram-toggle-row" style="padding-left:0;padding-right:0"><div><b>Запускать вместе с Windows</b><span>R-Messanger автоматически стартует после входа</span></div><input id="desktopStartAtLogin" type="checkbox"></label>
+            <label class="telegram-toggle-row" style="padding-left:0;padding-right:0"><div><b>Сворачивать в трей</b><span>Крестик скрывает приложение, а не завершает его</span></div><input id="desktopMinimizeToTray" type="checkbox"></label>
+            <div class="app-lock-settings-actions"><button class="tg-button primary" id="desktopSaveSettings" type="button">Применить</button><button class="settings-secondary-button" id="desktopReconnect" type="button">Переподключить</button></div>
+            <div class="app-lock-inline-success" id="desktopSettingsStatus"></div>
+          </div>
+        </div>
+      </section>
+      {% endif %}
+
+      <section class="settings-panel" data-settings-panel="language">
+        <div class="settings-group">
+          <div class="settings-group-title">Язык интерфейса</div>
+          <div class="settings-info-row"><span class="settings-text-icon">Я</span><div><b>Выберите язык</b><span>Перевод применяется сразу и сохраняется на всех устройствах.</span></div></div>
+          <label class="settings-language-select"><span>Язык</span><select id="languageSelect">{% for option in LANGUAGE_OPTIONS %}<option value="{{ option.code }}" {% if option.code == CURRENT_LANGUAGE %}selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+          <div class="settings-note">Доступны русский, English и O‘zbekcha.</div>
+        </div>
+      </section>
+
+      <section class="settings-panel" data-settings-panel="scale">
+        <div class="settings-group">
+          <div class="settings-group-title">Масштаб по умолчанию</div>
+          <div class="scale-control"><input id="fontScaleRange" type="range" name="pref-font_scale" min="85" max="120" step="5" value="{{ USER_PREF.font_scale }}"><div><span>85%</span><strong id="fontScaleValue">{{ USER_PREF.font_scale }}%</strong><span>120%</span></div></div>
+        </div>
+      </section>
+    </form>
+
+    <section class="settings-panel" data-settings-panel="devices">
+      <div class="settings-group">
+        <div class="settings-group-title">Активные устройства</div>
+        {% for d in device_sessions %}
+        <div class="settings-device-row" data-device-row="{{ d.pk }}"><div class="settings-device-icon">▣</div><div><b>{{ d.device_name|default:"Web session" }}</b><span>{{ d.platform }}{% if d.browser %} · {{ d.browser }}{% endif %} · {{ d.ip_address|default:"—" }}</span><small>{{ d.last_seen_at|date:"d.m.Y H:i:s" }}</small></div>{% if d.session_key != request.session.session_key %}<button type="button" class="settings-link-button" data-revoke-device="{{ d.pk }}">Завершить</button>{% else %}<strong>Текущее</strong>{% endif %}</div>
+        {% empty %}<div class="settings-note">Активных устройств нет.</div>{% endfor %}
+      </div>
+      <div class="settings-group"><form method="post" action="{% url 'accounts:revoke_other_sessions' %}">{% csrf_token %}<button class="settings-wide-danger">Завершить остальные сессии</button></form></div>
+    </section>
+
+    <section class="settings-panel" data-settings-panel="blocked">
+      <div class="settings-group"><div class="settings-group-title">Заблокированные пользователи</div>
+      {% for row in blocked_rows %}<div class="settings-device-row"><div class="tg-avatar tg-avatar-sm">{% if row.blocked.avatar_url %}<img src="{{ row.blocked.avatar_url }}" alt="">{% else %}<span>{{ row.blocked.initials }}</span>{% endif %}</div><div><b>{{ row.blocked.display_name }}</b><span>{% if row.blocked.handle %}@{{ row.blocked.handle }} · {% endif %}{{ row.blocked.email }}</span></div><form method="post" action="{% url 'accounts:unblock_from_settings' row.blocked.pk %}">{% csrf_token %}<button class="settings-link-button">Разблокировать</button></form></div>{% empty %}<div class="settings-note">Вы никого не блокировали.</div>{% endfor %}
+      </div>
+    </section>
+  </main>
+</div>
+<div class="presence-picker hidden" id="presencePicker" aria-hidden="true">
+  <div class="presence-picker-backdrop" data-close-presence-picker></div>
+  <section class="presence-picker-card" role="dialog" aria-modal="true" aria-labelledby="presencePickerTitle">
+    <header><button type="button" class="tg-icon-btn" data-close-presence-picker><svg><use href="{% static 'icons.svg' %}#back"></use></svg></button><div><b id="presencePickerTitle">Добавить исключение</b><span id="presencePickerHint">Найдите пользователя</span></div></header>
+    <div class="presence-picker-search"><svg><use href="{% static 'icons.svg' %}#search"></use></svg><input id="presencePickerSearch" autocomplete="off" placeholder="Поиск пользователей"></div>
+    <div class="presence-picker-results" id="presencePickerResults"><div class="presence-picker-empty">Начните вводить имя или @username</div></div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const titles={account:"Мой аккаунт",notifications:"Уведомления и звуки",privacy:"Конфиденциальность",chats:"Настройки чатов",advanced:"Продвинутые настройки",media:"Звук и микрофон",power:"Анимация и производительность",desktop:"Приложение",language:"Язык",scale:"Масштаб интерфейса",devices:"Устройства",blocked:"Заблокированные"};
+  const shell=$("#telegramSettings"), panelTitle=$("#settingsPanelTitle"), saveIndicator=$("#settingsSaveIndicator");
+  function openPanel(name,push=true){
+    if(!titles[name])name="account";
+    $$('[data-settings-panel]').forEach(x=>x.classList.toggle("active",x.dataset.settingsPanel===name));
+    $$('.settings-menu-row[data-settings-target]').forEach(x=>x.classList.toggle("active",x.dataset.settingsTarget===name));
+    panelTitle.textContent=titles[name];shell.dataset.activePanel=name;shell.classList.add("panel-open");
+    if(push)history.replaceState(null,"",`#${name}`);
+  }
+  document.addEventListener("click",e=>{const t=e.target.closest('[data-settings-target]');if(!t||t.tagName==="A")return;e.preventDefault();openPanel(t.dataset.settingsTarget)});
+  $(".settings-mobile-back")?.addEventListener("click",()=>shell.classList.remove("panel-open"));
+  const initial=location.hash.slice(1);openPanel(titles[initial]?initial:"account",false);
+
+  const languageSelect=$("#languageSelect");
+  languageSelect?.addEventListener("change",async()=>{
+    const value=languageSelect.value;
+    languageSelect.disabled=true;
+    try{
+      const r=await fetch(window.R_MES_GLOBAL?.languageUrl||"/auth/profile/language/",{method:"POST",headers:{"X-CSRFToken":RMesUI.csrf(),"X-Requested-With":"XMLHttpRequest","Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:new URLSearchParams({language:value})});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok||!j.ok)throw new Error(j.detail||"Не удалось изменить язык");
+      document.documentElement.lang=value;document.body.dataset.language=value;
+      location.reload();
+    }catch(error){languageSelect.disabled=false;RMesUI.toast(error.message||"Ошибка языка","error")}
+  });
+
+  const lastSeenPrivacy=$("#lastSeenPrivacy");
+  lastSeenPrivacy?.addEventListener("change",async()=>{
+    const old=lastSeenPrivacy.dataset.saved||"";lastSeenPrivacy.disabled=true;saveState("Сохраняю…","saving");
+    try{
+      const r=await fetch(lastSeenPrivacy.dataset.url,{method:"POST",headers:{"X-CSRFToken":RMesUI.csrf(),"X-Requested-With":"XMLHttpRequest","Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:new URLSearchParams({mode:lastSeenPrivacy.value})});
+      const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error(j.detail||"Не удалось изменить приватность");
+      lastSeenPrivacy.dataset.saved=j.mode;saveState("Сохранено","saved");
+      window.RMesRealtime?.resync?.();
+    }catch(err){if(old)lastSeenPrivacy.value=old;saveState("Ошибка","error");RMesUI.toast(err.message||"Ошибка","error")}finally{lastSeenPrivacy.disabled=false}
+  });
+  if(lastSeenPrivacy)lastSeenPrivacy.dataset.saved=lastSeenPrivacy.value;
+
+  // Telegram-style per-user last-seen exceptions.
+  const presencePicker=$("#presencePicker"),presencePickerSearch=$("#presencePickerSearch"),presencePickerResults=$("#presencePickerResults");
+  let presenceRuleMode="always";
+  const presenceRuleUrl="{% url 'accounts:presence_privacy_exception_api' %}";
+  function closePresencePicker(){presencePicker?.classList.add("hidden");presencePicker?.setAttribute("aria-hidden","true");if(presencePickerSearch)presencePickerSearch.value=""}
+  function openPresencePicker(mode){presenceRuleMode=mode;presencePicker?.classList.remove("hidden");presencePicker?.setAttribute("aria-hidden","false");$("#presencePickerTitle").textContent=mode==="always"?"Всегда показывать":"Показывать «недавно» для…";$("#presencePickerHint").textContent=mode==="always"?"Выбранные пользователи увидят точный статус":"Выбранные пользователи увидят только приблизительный статус";presencePickerResults.innerHTML='<div class="presence-picker-empty">Начните вводить имя или @username</div>';setTimeout(()=>presencePickerSearch?.focus(),30)}
+  $$('[data-open-presence-picker]').forEach(btn=>btn.addEventListener("click",()=>openPresencePicker(btn.dataset.openPresencePicker)));
+  $$('[data-close-presence-picker]').forEach(btn=>btn.addEventListener("click",closePresencePicker));
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!presencePicker?.classList.contains("hidden")){e.preventDefault();closePresencePicker()}});
+  async function savePresenceRule(targetId,mode){
+    const r=await fetch(presenceRuleUrl,{method:"POST",headers:{"X-CSRFToken":RMesUI.csrf(),"X-Requested-With":"XMLHttpRequest","Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:new URLSearchParams({action:"add",mode,target_id:String(targetId)})});
+    const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error(j.detail||"Не удалось сохранить исключение");return j;
+  }
+  const runPresenceSearch=RMesUI.debounce(async()=>{const q=(presencePickerSearch?.value||"").trim();if(!q){presencePickerResults.innerHTML='<div class="presence-picker-empty">Начните вводить имя или @username</div>';return}try{const r=await fetch(`${window.R_MES_GLOBAL.searchUrl}?q=${encodeURIComponent(q)}`,{headers:{"X-Requested-With":"XMLHttpRequest"}});const data=await r.json();const people=(data.people||[]).filter(p=>!p.blocked);presencePickerResults.innerHTML=people.length?people.map(p=>`<button type="button" class="presence-picker-user" data-presence-pick="${p.id}">${p.avatar?`<span class="tg-avatar tg-avatar-sm"><img src="${RMesUI.esc(p.avatar)}" alt=""></span>`:`<span class="tg-avatar tg-avatar-sm"><span>${RMesUI.esc(p.initials||"?")}</span></span>`}<span><b>${RMesUI.esc(p.name)}</b><small>${p.handle?`@${RMesUI.esc(p.handle)}`:RMesUI.esc(p.email||"")}</small></span><em>+</em></button>`).join(""):'<div class="presence-picker-empty">Ничего не найдено</div>';window.RMesI18n?.refresh?.()}catch(_){presencePickerResults.innerHTML='<div class="presence-picker-empty">Ошибка поиска</div>'}},180);
+  presencePickerSearch?.addEventListener("input",runPresenceSearch);
+  presencePickerResults?.addEventListener("click",async e=>{const btn=e.target.closest("[data-presence-pick]");if(!btn)return;btn.disabled=true;try{await savePresenceRule(btn.dataset.presencePick,presenceRuleMode);closePresencePicker();location.reload()}catch(err){btn.disabled=false;RMesUI.toast(err.message||"Ошибка","error")}});
+  $$('[data-remove-presence-rule]').forEach(btn=>btn.addEventListener("click",async()=>{btn.disabled=true;try{const r=await fetch(presenceRuleUrl,{method:"POST",headers:{"X-CSRFToken":RMesUI.csrf(),"X-Requested-With":"XMLHttpRequest","Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:new URLSearchParams({action:"remove",target_id:btn.dataset.removePresenceRule})});if(!r.ok)throw new Error();btn.closest(".presence-exception-user")?.remove();window.RMesRealtime?.resync?.()}catch(_){btn.disabled=false;RMesUI.toast("Не удалось удалить исключение","error")}}));
+
+  const profileForm=$("#profileForm"); let profileTimer=null,profileSaving=false,profileQueued=false;
+  function saveState(text,state=""){saveIndicator.textContent=text;saveIndicator.className=`settings-save-indicator ${state}`}
+  function showProfileErrors(errors={}){$$('[data-error-for]').forEach(x=>x.textContent="");Object.entries(errors).forEach(([k,v])=>{const slot=document.querySelector(`[data-error-for="${CSS.escape(k)}"]`);if(slot)slot.textContent=(v||[]).join(" ")})}
+  async function saveProfile(){
+    if(profileSaving){profileQueued=true;return} profileSaving=true;profileQueued=false;saveState("Сохраняю…","saving");
+    try{const r=await fetch(profileForm.action,{method:"POST",headers:{"X-CSRFToken":RMesUI.csrf(),"X-Requested-With":"XMLHttpRequest"},body:new FormData(profileForm)});const j=await r.json();if(!r.ok||!j.ok){showProfileErrors(j.errors||{});throw new Error("Проверьте поля")};showProfileErrors({});$("#navDisplayName").textContent=j.display_name||"";$("#navUsername").textContent=j.handle?`@${j.handle}`:"Добавьте @username";if(j.avatar_url){$("#navAvatar").innerHTML=`<img src="${j.avatar_url}" alt="">`;$("#avatarPreview").innerHTML=`<img src="${j.avatar_url}" alt="">`;$("#removeAvatarBtn")?.classList.remove("hidden")};const ai=$("#id_profile-avatar");if(ai)ai.value="";saveState("Сохранено","saved")}
+    catch(_){saveState("Не сохранено","error")}finally{profileSaving=false;if(profileQueued)setTimeout(saveProfile,80)}
+  }
+  function queueProfile(delay=650){clearTimeout(profileTimer);saveState("Изменения…","dirty");profileTimer=setTimeout(saveProfile,delay)}
+  profileForm?.querySelectorAll('input:not([type=file]),textarea').forEach(el=>{el.addEventListener("input",()=>queueProfile());el.addEventListener("change",()=>queueProfile(150))});
+  profileForm?.addEventListener("submit",e=>{e.preventDefault();saveProfile()});
+  const avatarInput=$("#id_profile-avatar");avatarInput?.addEventListener("change",()=>{const f=avatarInput.files?.[0];if(!f)return;const reader=new FileReader();reader.onload=()=>$("#avatarPreview").innerHTML=`<img src="${reader.result}" alt="">`;reader.readAsDataURL(f);queueProfile(80)});
+  $("#removeAvatarBtn")?.addEventListener("click",async()=>{try{const r=await fetch("{% url 'accounts:avatar_remove_api' %}",{method:"POST",headers:{"X-CSRFToken":RMesUI.csrf(),"X-Requested-With":"XMLHttpRequest"}});const j=await r.json();if(!r.ok)throw new Error();const initials=RMesUI.esc(j.initials||"?");$("#avatarPreview").innerHTML=`<span>${initials}</span>`;$("#navAvatar").innerHTML=`<span>${initials}</span>`;$("#removeAvatarBtn").classList.add("hidden")}catch(_){saveState("Ошибка","error")}});
+
+  const username=$("#id_profile-handle"), usernameStatus=$("#usernameAvailability");
+  if(username&&usernameStatus){const check=RMesUI.debounce(async()=>{const value=username.value.trim().replace(/^@/,"");if(!value){usernameStatus.textContent="По нему вас смогут находить сотрудники";return}try{const r=await fetch(`{% url 'accounts:username_check' %}?username=${encodeURIComponent(value)}`);const j=await r.json();usernameStatus.textContent=j.reason;usernameStatus.className=j.available?"username-ok":"username-bad"}catch(_){usernameStatus.textContent="Не удалось проверить"}},180);username.addEventListener("input",check)}
+
+  const prefForm=$("#preferenceForm"); let prefTimer=null;
+  async function savePreferences(){saveState("Сохраняю…","saving");try{const r=await fetch(prefForm.action,{method:"POST",headers:{"X-CSRFToken":RMesUI.csrf(),"X-Requested-With":"XMLHttpRequest"},body:new FormData(prefForm)});const j=await r.json();if(!r.ok||!j.ok)throw new Error();saveState("Сохранено","saved")}catch(_){saveState("Ошибка","error")}}
+  function queuePreferences(delay=120){clearTimeout(prefTimer);prefTimer=setTimeout(savePreferences,delay)}
+  prefForm?.addEventListener("change",e=>{
+    const el=e.target;
+    if(el.name==="pref-theme"){document.body.dataset.theme=el.value;$$('.theme-preview-card').forEach(x=>x.classList.toggle("selected",x.contains(el)))}
+    if(el.name==="pref-accent_color"){document.body.dataset.accent=el.value;$$('.accent-swatch').forEach(x=>x.classList.toggle("selected",x.contains(el)))}
+    if(el.name==="pref-chat_background"){document.body.dataset.chatBackground=el.value;$$('.chat-bg-option').forEach(x=>x.classList.toggle("selected",x.contains(el)))}
+    if(el.id==="id_pref-compact_mode")document.body.classList.toggle("compact-mode",el.checked);
+    if(el.id==="id_pref-animations_enabled")document.body.classList.toggle("reduce-motion",!el.checked);
+    if(el.id==="id_pref-desktop_notifications"&&el.checked&&"Notification" in window&&Notification.permission==="default")Notification.requestPermission().catch(()=>{});
+    queuePreferences();
+  });
+  $("#testDesktopNotification")?.addEventListener("click",async()=>{
+    const status=$("#desktopNotificationPermission");
+    if(window.RMesDesktop?.showNotification){
+      const r=await window.RMesDesktop.showNotification({title:"R-Messanger",body:"Тестовое уведомление работает.",url:"/",silent:false});
+      status.textContent=r?.ok?"Уведомление отправлено":"Не удалось показать уведомление";return;
+    }
+    if(!("Notification" in window)){status.textContent="Системные уведомления не поддерживаются";return}
+    let permission=Notification.permission;if(permission==="default")permission=await Notification.requestPermission();
+    if(permission!=="granted"){status.textContent="Доступ к уведомлениям запрещён";return}
+    status.textContent="Уведомление отправлено";const n=new Notification("R-Messanger",{body:"Тестовое уведомление работает."});n.onclick=()=>{window.focus();n.close()};
+  });
+  const scale=$("#fontScaleRange");scale?.addEventListener("input",()=>{$("#fontScaleValue").textContent=`${scale.value}%`;$("#scaleSidebarValue").textContent=`${scale.value}%`;document.body.dataset.fontScale=scale.value;window.RMesApplyScale?.(scale.value);queuePreferences(260)});
+
+  if(window.RMesDesktop?.isDesktop){
+    const server=$("#desktopServerUrl"),start=$("#desktopStartAtLogin"),tray=$("#desktopMinimizeToTray"),status=$("#desktopSettingsStatus");
+    window.RMesDesktop.getSettings().then(cfg=>{if(server)server.value=cfg.serverUrl||"http://127.0.0.1:8000";if(start)start.checked=!!cfg.startAtLogin;if(tray)tray.checked=!!cfg.minimizeToTray}).catch(()=>{});
+    $("#desktopSaveSettings")?.addEventListener("click",async()=>{status.textContent="Сохраняю…";const r=await window.RMesDesktop.saveSettings({serverUrl:server.value.trim(),startAtLogin:start.checked,minimizeToTray:tray.checked});status.textContent=r.ok?"Настройки приложения сохранены":(r.error||"Ошибка")});
+    $("#desktopReconnect")?.addEventListener("click",()=>window.RMesDesktop.reload());
+  }
+
+  async function testMedia(){const target=$("#microphoneStatus");target.textContent="Проверяю…";try{const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});target.textContent="Готово · доступ разрешён";stream.getTracks().forEach(t=>t.stop())}catch(_){target.textContent="Нет доступа к устройству"}}
+  $("#testMicrophone")?.addEventListener("click",testMedia);
+
+  const appLockForm=$("#appLockSettingsForm"),appLockState=$("#appLockState"),appLockError=$("#appLockSettingsError"),appLockSuccess=$("#appLockSettingsSuccess");
+  appLockForm?.addEventListener("submit",async e=>{
+    e.preventDefault();appLockError.textContent="";appLockSuccess.textContent="";
+    const fd=new FormData(appLockForm),enabled=$("#appLockEnabled")?.checked;
+    fd.set("enabled",enabled?"1":"0");fd.set("lock_on_start",$("#appLockOnStart")?.checked?"1":"0");
+    try{
+      const r=await fetch(appLockForm.action,{method:"POST",headers:{"X-CSRFToken":RMesUI.csrf(),"X-Requested-With":"XMLHttpRequest"},body:fd});
+      const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.detail||"Не удалось сохранить код-пароль");
+      appLockState.textContent=j.enabled?"Включено":"Выключено";appLockState.classList.toggle("off",!j.enabled);document.body.dataset.appLockEnabled=j.enabled?"1":"0";document.body.dataset.appLockTimeout=String(j.timeout_minutes||0);
+      appLockSuccess.textContent=j.enabled?"Код-пароль включён. Настройка действует и в браузере, и в Desktop.":"Код-пароль выключен.";
+      appLockForm.querySelectorAll('input[name="current_password"],input[name="code"],input[name="code_confirm"]').forEach(x=>x.value="");
+      if(j.enabled&&!$("#appLockNowBtn")){setTimeout(()=>location.reload(),450)}else if(!j.enabled){setTimeout(()=>location.reload(),450)}
+    }catch(err){appLockError.textContent=err.message}
+  });
+  $("#appLockNowBtn")?.addEventListener("click",()=>window.RMesLock?.lockNow?.("settings"));
+
+  $$('[data-revoke-device]').forEach(btn=>btn.addEventListener("click",async()=>{try{const r=await fetch(`/auth/profile/device/${btn.dataset.revokeDevice}/revoke/`,{method:"POST",headers:{"X-CSRFToken":RMesUI.csrf(),"X-Requested-With":"XMLHttpRequest"}});if(!r.ok)throw new Error();document.querySelector(`[data-device-row="${btn.dataset.revokeDevice}"]`)?.remove()}catch(_){saveState("Ошибка","error")}}));
+});
+</script>
+{% endblock %}

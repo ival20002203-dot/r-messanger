@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Control Center — {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="control-shell">{% include "control/_nav.html" %}
+<main class="control-main">
+  <section class="admin-hero">
+    <div>
+      <h1>Control Center</h1>
+      <p>Операционная панель {{ APP_NAME }} R-Messanger: активность, инфраструктура, безопасность, пользователи и forensic-контроль.</p>
+    </div>
+    <div class="admin-health-stack">
+      <span class="admin-health-pill {% if not db_ok %}health-bad{% endif %}">PostgreSQL {% if db_ok %}OK{% else %}ERROR{% endif %}</span>
+      <span class="admin-health-pill {% if not redis_ok %}health-bad{% endif %}">Redis {% if redis_ok %}OK{% else %}ERROR{% endif %}</span>
+    </div>
+  </section>
+
+  <div class="stats-grid">
+    <div class="stat-card"><span>Пользователи</span><b>{{ user_count }}</b><small>{{ online_count }} online</small></div>
+    <div class="stat-card"><span>Чаты</span><b>{{ conversation_count }}</b><small>{{ active_chats_today }} активны сегодня</small></div>
+    <div class="stat-card"><span>Сообщения сегодня</span><b>{{ messages_today }}</b><small>{{ messages_hour }} за последний час</small></div>
+    <div class="stat-card"><span>Файлы сегодня</span><b>{{ files_today }}</b><small>{{ storage_bytes|filesizeformat }} всего</small></div>
+    <div class="stat-card"><span>Platform block</span><b>{{ suspended_count }}</b><small>аккаунтов заблокировано</small></div>
+    <div class="stat-card"><span>Ошибки входа</span><b>{{ failed_logins_today }}</b><small>{{ failed_logins_hour }} за последний час</small></div>
+    <div class="stat-card"><span>User blocks</span><b>{{ user_blocks }}</b><small>между сотрудниками</small></div>
+    <div class="stat-card"><span>Reserved @username</span><b>{{ reserved_username_count }}</b><small>{{ username_conflicts }} уже заняты и защищены</small></div>
+    <a class="stat-card security-dashboard-card" href="{% url 'control:security_center' %}">
+      <span>Security Center</span><b>{{ dlp_open }}</b>
+      <small>{% if security_worker_online %}worker ONLINE{% else %}worker OFFLINE{% endif %} · {{ malware_count }} malware · {{ security_scan_queue }} queue</small>
+    </a>
+    {% if user.is_developer %}
+    <a class="stat-card dev-stat moderation-dashboard-card" href="{% url 'control:moderation_queue' %}">
+      <span>18+ Moderation</span><b>{{ moderation_pending }}</b><small>{% if moderation_worker_online %}worker ONLINE{% else %}worker OFFLINE{% endif %} · {{ moderation_queue }} queue · {{ moderation_errors }} errors</small>
+    </a>
+    <div class="stat-card dev-stat"><span>Forensic delete/clear events</span><b>{{ deleted_chats }} / {{ cleared_chats }}</b><small>{{ deleted_messages }} удалённых сообщений</small></div>
+    {% endif %}
+  </div>
+
+  <div class="admin-grid-2">
+    <section class="admin-panel">
+      <div class="admin-section-head"><h2>Роли</h2><span>распределение аккаунтов</span></div>
+      <div class="admin-metric-list">
+        {% for r in role_rows %}
+        <div class="admin-metric-row">
+          <span>{{ r.label }}</span>
+          <div class="admin-metric-bar"><i style="width:{{ r.pct }}%"></i></div>
+          <b>{{ r.count }}</b>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <div class="admin-section-head"><h2>Самые активные</h2><span>по отправленным сообщениям</span></div>
+      {% for x in top_users %}
+      <a class="admin-mini-user" href="{% url 'control:user_detail' x.pk %}">
+        <div class="tg-avatar tg-avatar-sm">{% if x.avatar_url %}<img src="{{ x.avatar_url }}" alt="">{% else %}<span>{{ x.initials }}</span>{% endif %}</div>
+        <div><b>{{ x.display_name }}</b><span>{% if x.handle %}@{{ x.handle }} · {% endif %}{{ x.email }}</span></div>
+        <strong>{{ x.message_count }}</strong>
+      </a>
+      {% empty %}<div class="subtle">Пока нет активности.</div>{% endfor %}
+    </section>
+  </div>
+
+  {% if user.is_developer %}
+  <div class="admin-warning" style="margin-top:12px">Developer-режим: forensic-доступ отделён от обычных административных ролей. Каждый просмотр удалённых оригиналов и экспорт фиксируются в AuditEvent.</div>
+  {% endif %}
+
+  <section class="admin-panel">
+    <div class="admin-section-head"><h2>Последние события</h2><a href="{% url 'control:audit_log' %}" class="subtle">Открыть весь аудит →</a></div>
+    <table class="admin-table">
+      <thead><tr><th>Время</th><th>Кто</th><th>IP</th><th>Действие</th><th>Объект</th></tr></thead>
+      <tbody>
+        {% for x in recent_audit %}
+        <tr><td>{{ x.created_at|date:"d.m.Y H:i:s" }}</td><td>{{ x.actor.email|default:"system" }}</td><td>{{ x.ip_address|default:"—" }}</td><td><code>{{ x.action }}</code></td><td>{{ x.object_type }} {{ x.object_id }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main></div>
+{% endblock %}

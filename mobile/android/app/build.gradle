@@ -1,0 +1,47 @@
+plugins { id 'com.android.application' }
+
+if (file('google-services.json').exists()) { apply plugin: 'com.google.gms.google-services' }
+
+def keystorePropsFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) { keystoreProps.load(new FileInputStream(keystorePropsFile)) }
+
+android {
+    namespace 'uz.rmes.app'
+    compileSdk 35
+
+    signingConfigs {
+        release {
+            if (keystorePropsFile.exists()) {
+                storeFile rootProject.file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
+
+    defaultConfig {
+        applicationId 'uz.rmes.app'
+        minSdk 26
+        targetSdk 35
+        versionCode 15100
+        versionName '15.1.2'
+    }
+
+    buildTypes {
+        debug { applicationIdSuffix '.debug'; versionNameSuffix '-debug' }
+        release {
+            minifyEnabled false
+            if (keystorePropsFile.exists()) signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+
+dependencies {
+    implementation 'androidx.core:core:1.15.0'
+    implementation platform('com.google.firebase:firebase-bom:34.4.0')
+    implementation 'com.google.firebase:firebase-messaging'
+}

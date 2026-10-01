@@ -1,0 +1,223 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-localgram}
+      POSTGRES_USER: ${POSTGRES_USER:-localgram}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - localgram_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-localgram} -d ${POSTGRES_DB:-localgram}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  pgbouncer:
+    build:
+      context: .
+      dockerfile: Dockerfile.pgbouncer
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - localgram_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    env_file: .env
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-localgram}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-CHANGE_MINIO_PASSWORD}
+    volumes:
+      - localgram_minio:/data
+
+  minio-init:
+    image: minio/mc:latest
+    restart: "no"
+    env_file: .env
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-localgram}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-CHANGE_MINIO_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET:-localgram-media}
+    depends_on: [minio]
+    entrypoint: >
+      /bin/sh -c "until mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\"; do sleep 2; done; mc mb --ignore-existing local/$$MINIO_BUCKET; mc anonymous set none local/$$MINIO_BUCKET;"
+
+  clamav:
+    image: clamav/clamav:stable
+    restart: unless-stopped
+    volumes:
+      - localgram_clamav:/var/lib/clamav
+
+  coturn:
+    image: coturn/coturn:latest
+    restart: unless-stopped
+    network_mode: host
+    command: >
+      -n --log-file=stdout --fingerprint --lt-cred-mech --realm=r-mes
+      --user=${TURN_USERNAME:-rmes}:${TURN_PASSWORD:-RMes-Turn-ChangeMe}
+      --listening-port=3478 --min-port=49160 --max-port=49200
+      --external-ip=${TURN_HOST:-10.10.10.130} --no-cli
+
+
+  migrate:
+    build: .
+    restart: "no"
+    env_file: .env
+    environment:
+      SKIP_STARTUP_MIGRATIONS: "1"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    volumes:
+      - ./media:/app/media:ro
+      - localgram_private_media:/app/private_media
+      - localgram_logs:/app/logs
+      - ./client_updates:/app/client_updates:ro
+    command: ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py bootstrap_localgram"]
+
+  web1:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SKIP_STARTUP_MIGRATIONS: "1"
+      POSTGRES_HOST: pgbouncer
+      POSTGRES_PORT: "6432"
+      DB_CONN_MAX_AGE: "0"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    volumes:
+      - localgram_private_media:/app/private_media
+      - localgram_logs:/app/logs
+      - ./client_updates:/app/client_updates:ro
+      - ./secrets:/run/secrets:ro
+    command: ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py sync_client_versions || true; exec daphne -b 0.0.0.0 -p 8000 localgram.asgi:application"]
+
+  web2:
+    extends:
+      service: web1
+
+  moderator:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SKIP_STARTUP_MIGRATIONS: "1"
+      POSTGRES_HOST: pgbouncer
+      POSTGRES_PORT: "6432"
+      DB_CONN_MAX_AGE: "0"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - localgram_private_media:/app/private_media
+      - localgram_logs:/app/logs
+    command: ["python", "manage.py", "run_moderation_worker"]
+
+  securityworker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SKIP_STARTUP_MIGRATIONS: "1"
+      POSTGRES_HOST: pgbouncer
+      POSTGRES_PORT: "6432"
+      DB_CONN_MAX_AGE: "0"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      clamav:
+        condition: service_healthy
+    volumes:
+      - localgram_private_media:/app/private_media
+      - localgram_logs:/app/logs
+    command: ["python", "manage.py", "run_security_worker"]
+
+  scheduler:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SKIP_STARTUP_MIGRATIONS: "1"
+      POSTGRES_HOST: pgbouncer
+      POSTGRES_PORT: "6432"
+      DB_CONN_MAX_AGE: "0"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - localgram_logs:/app/logs
+    command: ["python", "manage.py", "run_scheduled_posts"]
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    environment:
+      R_MES_SERVER_NAME: ${R_MES_SERVER_NAME:-rmes.company.uz}
+      FILES_SERVER_NAME: ${FILES_SERVER_NAME:-files.rmes.company.uz}
+      CLIENT_MAX_BODY_SIZE: ${CLIENT_MAX_BODY_SIZE:-110m}
+    ports:
+      - "80:80"
+    volumes:
+      - ./infrastructure/nginx/templates:/etc/nginx/templates:ro
+    depends_on:
+      - web1
+      - web2
+      - minio
+
+  # Public HTTPS edge. For a public VPS set R_MES_SERVER_NAME / FILES_SERVER_NAME
+  # to DNS names that resolve to this server. Caddy obtains TLS automatically.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      R_MES_SERVER_NAME: ${R_MES_SERVER_NAME:-rmes.company.uz}
+      FILES_SERVER_NAME: ${FILES_SERVER_NAME:-files.rmes.company.uz}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
+    ports:
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./infrastructure/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - rmes_caddy_data:/data
+      - rmes_caddy_config:/config
+    depends_on:
+      - nginx
+
+volumes:
+  localgram_postgres:
+    name: localgram_localgram_postgres
+  localgram_redis:
+    name: localgram_localgram_redis
+  localgram_minio:
+    name: localgram_localgram_minio
+  localgram_clamav:
+    name: localgram_localgram_clamav
+  localgram_private_media:
+  localgram_logs:
+  rmes_caddy_data:
+  rmes_caddy_config:

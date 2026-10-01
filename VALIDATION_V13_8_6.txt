@@ -1,0 +1,26 @@
+R-Mes 13.8.6 validation
+============================
+
+Validated on 2026-09-11:
+
+- Django system check: passed (0 issues).
+- JavaScript syntax check (static/app.js): passed.
+- Python compile check for presence API/consumer/tests: passed.
+- Full Django test suite: 42 tests passed.
+- Added regression coverage for:
+  * independent timestamps for different employees;
+  * multi-window presence aggregation;
+  * navigation/close grace;
+  * preservation of the real last-seen timestamp;
+  * viewer-scoped developer presence privacy.
+
+Expected runtime behavior
+-------------------------
+
+1. Opening R-Mes changes the employee to "в сети".
+2. Minimizing, blurring, changing chat or reconnecting WebSocket keeps "в сети".
+3. Closing one of several windows keeps "в сети".
+4. Closing the final window changes to "был(а) ..." after the five-second
+   navigation grace and the next two-second observer refresh.
+5. Each employee keeps their own server timestamp in Asia/Tashkent.
+6. Ordinary users receive no developer online or last-seen timestamp.

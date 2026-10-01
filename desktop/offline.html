@@ -1,0 +1,15 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>R-Messanger — нет соединения</title><style>
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{font-family:Segoe UI,Arial,sans-serif;background:#0e1621;color:#f4f6f8;display:grid;place-items:center}
+.card{width:min(470px,calc(100% - 36px));padding:30px;border:1px solid #263a49;background:#17212b;border-radius:22px;text-align:center;box-shadow:0 25px 70px #0006}
+.logo-img{display:block;width:150px;height:auto;margin:0 auto 18px;filter:drop-shadow(0 12px 28px rgba(11,78,44,.28))}
+h1{font-size:22px;margin:18px 0 7px}p{color:#8497a6;line-height:1.55;font-size:13px}code{display:block;background:#101923;padding:10px;border-radius:9px;color:#6cc8f5;word-break:break-all}
+button{border:0;border-radius:11px;padding:11px 16px;background:#229ED9;color:white;font-weight:800;cursor:pointer;margin-top:14px}
+</style></head><body><main class="card"><img class="logo-img" src="assets/rmes-logo.svg" alt="R-Messanger"><h1>R-Messanger недоступен</h1><p>Локальный клиент не может подключиться к серверу R-Messanger. Проверьте корпоративную сеть/VPN и повторите подключение. Данные синхронизируются с сервером после восстановления связи.</p><code id="server"></code><button id="retry">Повторить подключение</button></main>
+<script>
+const q=new URLSearchParams(location.search);
+const primary=q.get("server")||"R-Messanger server";
+const local=q.get("local")||"http://10.10.10.130:8000";
+document.querySelector("#server").textContent=`${primary} · fallback: ${local}`;
+document.querySelector("#retry").addEventListener("click",()=>window.RMesDesktop?.retry());
+</script></body></html>
