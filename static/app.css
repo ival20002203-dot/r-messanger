@@ -877,3 +877,264 @@ body:not([data-theme="light"]) .tg-app{background:radial-gradient(circle at 18% 
 .settings-action-row b,.settings-info-row b,.telegram-toggle-row b{line-height:1.25}
 .control-main .tg-button{justify-content:center;white-space:nowrap}
 @media(max-width:680px){.tg-empty-center>div:last-child{display:grid;grid-template-columns:1fr;width:min(300px,88vw);margin-inline:auto}.tg-empty-center>div:last-child .tg-button{width:100%;min-width:0}}
+
+
+
+/* =========================================================
+   R-Messanger Mobile UI — Telegram-like layout
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: #0e1621;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+
+  /* Основное приложение */
+  .app-shell,
+  .messenger-shell,
+  .chat-shell {
+    width: 100% !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Левая колонка со списком чатов */
+  .sidebar,
+  .chat-sidebar,
+  .conversations-panel {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    height: 100dvh !important;
+    z-index: 20;
+    border: 0 !important;
+    background: #17212b !important;
+  }
+
+  /* Когда открыт чат */
+  body.chat-open .sidebar,
+  body.chat-open .chat-sidebar,
+  body.chat-open .conversations-panel {
+    transform: translateX(-100%);
+    pointer-events: none;
+  }
+
+  /* Область диалога */
+  .chat-main,
+  .conversation-main,
+  .messages-panel {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    min-width: 100% !important;
+    background: #0e1621 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Шапка */
+  .chat-header,
+  .conversation-header {
+    min-height: 58px !important;
+    height: 58px !important;
+    padding: 6px 10px !important;
+    background: #17212b !important;
+    border-bottom: 1px solid rgba(255,255,255,.06) !important;
+    flex-shrink: 0;
+  }
+
+  .chat-header img,
+  .conversation-header img,
+  .avatar {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+    object-fit: cover;
+  }
+
+  .chat-header .title,
+  .conversation-header .title {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    line-height: 20px !important;
+  }
+
+  .chat-header .status,
+  .conversation-header .status {
+    font-size: 12px !important;
+    opacity: .7;
+  }
+
+  /* Список сообщений */
+  .messages,
+  .message-list,
+  .chat-messages {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    padding: 10px 8px 12px !important;
+    scroll-behavior: smooth;
+    background: #0e1621 !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Сообщения */
+  .message,
+  .message-bubble,
+  .bubble {
+    max-width: 82% !important;
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+    border-radius: 14px !important;
+    padding: 7px 10px 6px !important;
+    margin: 2px 0 !important;
+    word-break: break-word;
+    box-shadow: 0 1px 1px rgba(0,0,0,.14);
+  }
+
+  .message.outgoing,
+  .message.mine,
+  .message--out,
+  .bubble.me {
+    margin-left: auto !important;
+    background: #2b5278 !important;
+    color: #fff !important;
+    border-bottom-right-radius: 5px !important;
+  }
+
+  .message.incoming,
+  .message.other,
+  .message--in,
+  .bubble.them {
+    margin-right: auto !important;
+    background: #182533 !important;
+    color: #fff !important;
+    border-bottom-left-radius: 5px !important;
+  }
+
+  /* Время сообщения */
+  .message-time,
+  .msg-time {
+    font-size: 10px !important;
+    opacity: .62;
+    margin-left: 6px;
+  }
+
+  /* Поле отправки */
+  .composer,
+  .message-composer,
+  .chat-input-wrap {
+    flex-shrink: 0 !important;
+    padding:
+      6px
+      8px
+      calc(6px + env(safe-area-inset-bottom)) !important;
+    background: #17212b !important;
+    border-top: 1px solid rgba(255,255,255,.05) !important;
+  }
+
+  .composer textarea,
+  .composer input,
+  .message-composer textarea,
+  .message-composer input,
+  .chat-input {
+    min-height: 42px !important;
+    max-height: 120px !important;
+    border-radius: 22px !important;
+    font-size: 16px !important;
+    padding: 10px 14px !important;
+    background: #242f3d !important;
+    color: #fff !important;
+    border: 0 !important;
+    outline: none !important;
+  }
+
+  .composer button,
+  .send-button,
+  .message-send {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    border-radius: 50% !important;
+  }
+
+  /* Элементы списка чатов */
+  .conversation-item,
+  .chat-item,
+  .dialog-item {
+    min-height: 68px !important;
+    padding: 8px 10px !important;
+    border-bottom: 1px solid rgba(255,255,255,.05) !important;
+  }
+
+  .conversation-item img,
+  .chat-item img,
+  .dialog-item img {
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 50% !important;
+  }
+
+  .conversation-item .name,
+  .chat-item .name,
+  .dialog-item .name {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+  }
+
+  .conversation-item .preview,
+  .chat-item .preview,
+  .dialog-item .preview {
+    font-size: 14px !important;
+    opacity: .72;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Скрываем desktop-элементы */
+  .desktop-only,
+  .right-panel,
+  .details-panel {
+    display: none !important;
+  }
+
+  /* Кнопка назад */
+  .mobile-back,
+  .chat-back {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+  }
+
+  /* Убираем горизонтальный скролл */
+  * {
+    box-sizing: border-box;
+  }
+
+  body,
+  .app-shell,
+  .chat-shell {
+    overflow-x: hidden !important;
+  }
+}
