@@ -1,44 +1,44 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static humanize chat_extras tz %}
-{% block title %}{% if conversation %}{{ chat_title }} вЂ” {% endif %}{{ APP_NAME }}{% endblock %}
+{% block title %}{% if conversation %}{{ chat_title }} — {% endif %}{{ APP_NAME }}{% endblock %}
 {% block content %}
-<div class="tg-app info-collapsed {% if conversation %}has-chat{% else %}chat-list-only{% endif %}" data-user-id="{{ user.id }}">
+<div class="tg-app info-collapsed {% if conversation %}mobile-chat-open{% else %}mobile-chat-list{% endif %}" data-user-id="{{ user.id }}">
   <aside class="tg-sidebar">
     <div class="tg-sidebar-head">
-      <button class="tg-icon-btn" id="sidebarMenuBtn" type="button" title="РњРµРЅСЋ">
+      <button class="tg-icon-btn" id="sidebarMenuBtn" type="button" title="Меню">
         <svg><use href="{% static 'icons.svg' %}#menu"></use></svg>
       </button>
       <div class="tg-search-wrap">
         <svg class="tg-search-icon"><use href="{% static 'icons.svg' %}#search"></use></svg>
-        <input id="globalSearch" autocomplete="off" placeholder="РџРѕРёСЃРє" aria-label="РџРѕРёСЃРє">
+        <input id="globalSearch" autocomplete="off" placeholder="Поиск" aria-label="Поиск">
         <button id="clearGlobalSearch" class="tg-search-clear hidden" type="button">
           <svg><use href="{% static 'icons.svg' %}#close"></use></svg>
         </button>
         <div class="tg-search-results hidden" id="globalSearchResults"></div>
       </div>
-      <button class="tg-icon-btn notification-bell" id="notificationBell" type="button" title="РЈРІРµРґРѕРјР»РµРЅРёСЏ"><svg><use href="{% static 'icons.svg' %}#bell"></use></svg>{% if notification_unread %}<span id="notificationBadge">{{ notification_unread }}</span>{% else %}<span id="notificationBadge" class="hidden"></span>{% endif %}</button>
-      <button class="tg-icon-btn tg-quick-lock {% if USER_PREF and USER_PREF.app_lock_enabled %}active{% endif %}" id="quickLockBtn" type="button" data-lock-enabled="{% if USER_PREF and USER_PREF.app_lock_enabled %}1{% else %}0{% endif %}" data-lock-settings="{% url 'accounts:profile' %}#privacy" title="{% if USER_PREF and USER_PREF.app_lock_enabled %}Р—Р°Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ R-Messanger{% else %}РќР°СЃС‚СЂРѕРёС‚СЊ РєРѕРґ-РїР°СЂРѕР»СЊ{% endif %}">
+      <button class="tg-icon-btn notification-bell" id="notificationBell" type="button" title="Уведомления"><svg><use href="{% static 'icons.svg' %}#bell"></use></svg>{% if notification_unread %}<span id="notificationBadge">{{ notification_unread }}</span>{% else %}<span id="notificationBadge" class="hidden"></span>{% endif %}</button>
+      <button class="tg-icon-btn tg-quick-lock {% if USER_PREF and USER_PREF.app_lock_enabled %}active{% endif %}" id="quickLockBtn" type="button" data-lock-enabled="{% if USER_PREF and USER_PREF.app_lock_enabled %}1{% else %}0{% endif %}" data-lock-settings="{% url 'accounts:profile' %}#privacy" title="{% if USER_PREF and USER_PREF.app_lock_enabled %}Заблокировать R-Messanger{% else %}Настроить код-пароль{% endif %}">
         <svg><use href="{% static 'icons.svg' %}#lock"></use></svg>
       </button>
-      <a class="tg-icon-btn tg-new-chat" href="{% url 'chat:new_direct' %}" title="РќРѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ">
+      <a class="tg-icon-btn tg-new-chat" href="{% url 'chat:new_direct' %}" title="Новое сообщение">
         <svg><use href="{% static 'icons.svg' %}#edit"></use></svg>
       </a>
 
       <div class="tg-side-menu hidden" id="sidebarMenu">
         <a href="{% url 'accounts:profile' %}">
           <span class="tg-menu-icon"><svg><use href="{% static 'icons.svg' %}#settings"></use></svg></span>
-          РќР°СЃС‚СЂРѕР№РєРё
+          Настройки
         </a>
         <a href="{% url 'chat:new_group' %}">
           <span class="tg-menu-icon"><svg><use href="{% static 'icons.svg' %}#users"></use></svg></span>
-          РќРѕРІР°СЏ РіСЂСѓРїРїР° / РєР°РЅР°Р»
+          Новая группа / канал
         </a>
-        <a href="{% url 'chat:people_search' %}"><span class="tg-menu-icon"><svg><use href="{% static 'icons.svg' %}#user"></use></svg></span>РљРѕРЅС‚Р°РєС‚С‹</a>
-        <a href="{% url 'chat:saved_messages' %}"><span class="tg-menu-icon"><svg><use href="{% static 'icons.svg' %}#pin"></use></svg></span>РР·Р±СЂР°РЅРЅРѕРµ</a>
-        <a href="{% url 'chat:folder_settings' %}"><span class="tg-menu-icon"><svg><use href="{% static 'icons.svg' %}#archive"></use></svg></span>РџР°РїРєРё С‡Р°С‚РѕРІ</a>
-        <a href="{% url 'chat:sticker_settings' %}"><span class="tg-menu-icon"><svg><use href="{% static 'icons.svg' %}#smile"></use></svg></span>РЎС‚РёРєРµСЂС‹ Рё emoji</a>
+        <a href="{% url 'chat:people_search' %}"><span class="tg-menu-icon"><svg><use href="{% static 'icons.svg' %}#user"></use></svg></span>Контакты</a>
+        <a href="{% url 'chat:saved_messages' %}"><span class="tg-menu-icon"><svg><use href="{% static 'icons.svg' %}#pin"></use></svg></span>Избранное</a>
+        <a href="{% url 'chat:folder_settings' %}"><span class="tg-menu-icon"><svg><use href="{% static 'icons.svg' %}#archive"></use></svg></span>Папки чатов</a>
+        <a href="{% url 'chat:sticker_settings' %}"><span class="tg-menu-icon"><svg><use href="{% static 'icons.svg' %}#smile"></use></svg></span>Стикеры и emoji</a>
         {% if IS_DESKTOP_APP or IS_ANDROID_APP or IS_IOS_APP %}
-        <button type="button" id="checkClientUpdateBtn"><span class="tg-menu-icon">в†»</span>РџСЂРѕРІРµСЂРёС‚СЊ РѕР±РЅРѕРІР»РµРЅРёСЏ</button>
+        <button type="button" id="checkClientUpdateBtn"><span class="tg-menu-icon">↻</span>Проверить обновления</button>
         {% endif %}
         {% if user.is_control_admin %}
         <div class="tg-menu-separator"></div>
@@ -49,22 +49,22 @@
         {% endif %}
         {% if USER_PREF and USER_PREF.app_lock_enabled %}
         <div class="tg-menu-separator"></div>
-        <button type="button" id="sidebarLockNow"><span class="tg-menu-icon"><svg><use href="{% static 'icons.svg' %}#lock"></use></svg></span>Р—Р°Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ R-Messanger</button>
+        <button type="button" id="sidebarLockNow"><span class="tg-menu-icon"><svg><use href="{% static 'icons.svg' %}#lock"></use></svg></span>Заблокировать R-Messanger</button>
         {% endif %}
         <div class="tg-menu-separator"></div>
-        <a href="{% url 'accounts:logout' %}" class="danger-link">Р’С‹Р№С‚Рё</a>
+        <a href="{% url 'accounts:logout' %}" class="danger-link">Выйти</a>
       </div>
     </div>
 
 
     <nav class="tg-folder-tabs">
-      <a href="{% url 'chat:home' %}?folder=all" class="{% if folder == 'all' or not folder %}active{% endif %}">Р’СЃРµ</a>
-      <a href="{% url 'chat:home' %}?folder=direct" class="{% if folder == 'direct' %}active{% endif %}">Р›РёС‡РЅС‹Рµ</a>
-      <a href="{% url 'chat:home' %}?folder=groups" class="{% if folder == 'groups' %}active{% endif %}">Р“СЂСѓРїРїС‹</a>
-      <a href="{% url 'chat:home' %}?folder=channels" class="{% if folder == 'channels' %}active{% endif %}">РљР°РЅР°Р»С‹</a>
-      <a href="{% url 'chat:home' %}?folder=unread" class="{% if folder == 'unread' %}active{% endif %}">РќРµРїСЂРѕС‡РёС‚Р°РЅРЅС‹Рµ <span id="sidebarUnreadTotal" class="tg-folder-count hidden"></span></a>
+      <a href="{% url 'chat:home' %}?folder=all" class="{% if folder == 'all' or not folder %}active{% endif %}">Все</a>
+      <a href="{% url 'chat:home' %}?folder=direct" class="{% if folder == 'direct' %}active{% endif %}">Личные</a>
+      <a href="{% url 'chat:home' %}?folder=groups" class="{% if folder == 'groups' %}active{% endif %}">Группы</a>
+      <a href="{% url 'chat:home' %}?folder=channels" class="{% if folder == 'channels' %}active{% endif %}">Каналы</a>
+      <a href="{% url 'chat:home' %}?folder=unread" class="{% if folder == 'unread' %}active{% endif %}">Непрочитанные <span id="sidebarUnreadTotal" class="tg-folder-count hidden"></span></a>
       {% for f in custom_folders %}<a href="{% url 'chat:home' %}?folder=f-{{ f.pk }}">{{ f.name }}</a>{% endfor %}
-      <a href="{% url 'chat:home' %}?folder=archived" class="{% if folder == 'archived' %}active{% endif %}">РђСЂС…РёРІ</a>
+      <a href="{% url 'chat:home' %}?folder=archived" class="{% if folder == 'archived' %}active{% endif %}">Архив</a>
     </nav>
 
     <div class="tg-chat-list" id="chatList">
@@ -96,9 +96,9 @@
           <div class="tg-chat-bottomline">
             <div class="tg-chat-preview">
               {% if card.last %}
-                {% if card.last.sender_id == user.id %}<span class="you-prefix">Р’С‹:</span>{% endif %}
-                {% if card.last.is_deleted %}<i>РЎРѕРѕР±С‰РµРЅРёРµ СѓРґР°Р»РµРЅРѕ</i>{% else %}{{ card.last.body|truncatechars:54 }}{% endif %}
-              {% else %}РќРµС‚ СЃРѕРѕР±С‰РµРЅРёР№{% endif %}
+                {% if card.last.sender_id == user.id %}<span class="you-prefix">Вы:</span>{% endif %}
+                {% if card.last.is_deleted %}<i>Сообщение удалено</i>{% else %}{{ card.last.body|truncatechars:54 }}{% endif %}
+              {% else %}Нет сообщений{% endif %}
             </div>
             {% if card.unread %}<span class="tg-unread">{{ card.unread }}</span>{% endif %}
           </div>
@@ -107,8 +107,8 @@
       {% empty %}
       <div class="tg-sidebar-empty">
         <div class="tg-empty-icon"><svg><use href="{% static 'icons.svg' %}#edit"></use></svg></div>
-        <b>РќР°С‡РЅРёС‚Рµ РѕР±С‰РµРЅРёРµ</b>
-        <span>РќР°Р№РґРёС‚Рµ СЃРѕС‚СЂСѓРґРЅРёРєР° С‡РµСЂРµР· РїРѕРёСЃРє РёР»Рё СЃРѕР·РґР°Р№С‚Рµ РЅРѕРІС‹Р№ С‡Р°С‚.</span>
+        <b>Начните общение</b>
+        <span>Найдите сотрудника через поиск или создайте новый чат.</span>
       </div>
       {% endfor %}
     </div>
@@ -132,7 +132,7 @@
         <svg><use href="{% static 'icons.svg' %}#menu"></use></svg>
       </button>
 
-      <button class="tg-icon-btn tg-close-chat-btn" id="closeChatBtn" type="button" title="Р—Р°РєСЂС‹С‚СЊ С‡Р°С‚ (Esc)">
+      <button class="tg-icon-btn tg-close-chat-btn" id="closeChatBtn" type="button" title="Закрыть чат (Esc)">
         <svg><use href="{% static 'icons.svg' %}#back"></use></svg>
       </button>
       <a href="{% url 'chat:conversation_info' conversation.pk %}" class="tg-header-user">
@@ -143,11 +143,11 @@
           <b>{{ chat_title }}</b>
           <span id="peerStatus">
             {% if peer %}
-              {% if blocked_by_me %}РІС‹ Р·Р°Р±Р»РѕРєРёСЂРѕРІР°Р»Рё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
-              {% elif blocked_me %}РѕС‚РїСЂР°РІРєР° СЃРѕРѕР±С‰РµРЅРёР№ РЅРµРґРѕСЃС‚СѓРїРЅР°
+              {% if blocked_by_me %}вы заблокировали пользователя
+              {% elif blocked_me %}отправка сообщений недоступна
               {% else %}{{ peer_presence }}{% endif %}
             {% else %}
-              {{ conversation.members.count }} СѓС‡Р°СЃС‚РЅРёРєРѕРІ
+              {{ conversation.members.count }} участников
             {% endif %}
           </span>
         </div>
@@ -155,55 +155,55 @@
 
       <div class="tg-header-actions">
         {% if conversation.kind == "direct" and user.can_make_calls and not blocked_by_me and not blocked_me %}
-          <button class="tg-icon-btn" id="callAudio" type="button" title="РђСѓРґРёРѕР·РІРѕРЅРѕРє"><svg><use href="{% static 'icons.svg' %}#phone"></use></svg></button>
+          <button class="tg-icon-btn" id="callAudio" type="button" title="Аудиозвонок"><svg><use href="{% static 'icons.svg' %}#phone"></use></svg></button>
         {% endif %}
-        <button class="tg-icon-btn" id="toggleMessageSearch" type="button" title="РџРѕРёСЃРє РІ С‡Р°С‚Рµ"><svg><use href="{% static 'icons.svg' %}#search"></use></svg></button>
-        <button class="tg-icon-btn" id="toggleInfoPanel" type="button" title="РџР°РЅРµР»СЊ РёРЅС„РѕСЂРјР°С†РёРё"><svg><use href="{% static 'icons.svg' %}#info"></use></svg></button>
-        <button class="tg-icon-btn" id="chatMenuBtn" type="button" title="Р”РµР№СЃС‚РІРёСЏ"><svg><use href="{% static 'icons.svg' %}#more"></use></svg></button>
+        <button class="tg-icon-btn" id="toggleMessageSearch" type="button" title="Поиск в чате"><svg><use href="{% static 'icons.svg' %}#search"></use></svg></button>
+        <button class="tg-icon-btn" id="toggleInfoPanel" type="button" title="Панель информации"><svg><use href="{% static 'icons.svg' %}#info"></use></svg></button>
+        <button class="tg-icon-btn" id="chatMenuBtn" type="button" title="Действия"><svg><use href="{% static 'icons.svg' %}#more"></use></svg></button>
       </div>
 
       <div class="tg-chat-menu hidden" id="chatMenu">
         <button type="button" data-chat-action="pin">
           <svg><use href="{% static 'icons.svg' %}#pin"></use></svg>
-          {% if member.is_pinned %}РћС‚РєСЂРµРїРёС‚СЊ С‡Р°С‚{% else %}Р—Р°РєСЂРµРїРёС‚СЊ С‡Р°С‚{% endif %}
+          {% if member.is_pinned %}Открепить чат{% else %}Закрепить чат{% endif %}
         </button>
-        {% if member.muted %}<button type="button" data-mute-minutes="0"><svg><use href="{% static 'icons.svg' %}#bell"></use></svg>Р’РєР»СЋС‡РёС‚СЊ СѓРІРµРґРѕРјР»РµРЅРёСЏ</button>{% else %}
-        <button type="button" data-mute-minutes="60"><svg><use href="{% static 'icons.svg' %}#bell-off"></use></svg>Р‘РµР· Р·РІСѓРєР° РЅР° 1 С‡Р°СЃ</button>
-        <button type="button" data-mute-minutes="480"><svg><use href="{% static 'icons.svg' %}#bell-off"></use></svg>Р‘РµР· Р·РІСѓРєР° РЅР° 8 С‡Р°СЃРѕРІ</button>
-        <button type="button" data-mute-minutes="-1"><svg><use href="{% static 'icons.svg' %}#bell-off"></use></svg>Р‘РµР· Р·РІСѓРєР° РЅР°РІСЃРµРіРґР°</button>{% endif %}
+        {% if member.muted %}<button type="button" data-mute-minutes="0"><svg><use href="{% static 'icons.svg' %}#bell"></use></svg>Включить уведомления</button>{% else %}
+        <button type="button" data-mute-minutes="60"><svg><use href="{% static 'icons.svg' %}#bell-off"></use></svg>Без звука на 1 час</button>
+        <button type="button" data-mute-minutes="480"><svg><use href="{% static 'icons.svg' %}#bell-off"></use></svg>Без звука на 8 часов</button>
+        <button type="button" data-mute-minutes="-1"><svg><use href="{% static 'icons.svg' %}#bell-off"></use></svg>Без звука навсегда</button>{% endif %}
         <button type="button" data-chat-action="archive">
           <svg><use href="{% static 'icons.svg' %}#archive"></use></svg>
-          {% if member.is_archived %}Р’РµСЂРЅСѓС‚СЊ РёР· Р°СЂС…РёРІР°{% else %}Р’ Р°СЂС…РёРІ{% endif %}
+          {% if member.is_archived %}Вернуть из архива{% else %}В архив{% endif %}
         </button>
         <a href="{% url 'chat:conversation_info' conversation.pk %}">
           <svg><use href="{% static 'icons.svg' %}#info"></use></svg>
-          РРЅС„РѕСЂРјР°С†РёСЏ
+          Информация
         </a>
-        {% if may_write %}<a href="{% url 'chat:poll_create' conversation.pk %}"><svg><use href="{% static 'icons.svg' %}#check"></use></svg>РЎРѕР·РґР°С‚СЊ РѕРїСЂРѕСЃ</a>{% endif %}
-        {% if conversation.kind == "channel" and may_admin %}<a href="{% url 'chat:scheduled_posts' conversation.pk %}"><svg><use href="{% static 'icons.svg' %}#clock"></use></svg>РћС‚Р»РѕР¶РµРЅРЅС‹Рµ РїСѓР±Р»РёРєР°С†РёРё</a>{% endif %}
-        <button type="button" data-chat-action="clear"><svg><use href="{% static 'icons.svg' %}#trash"></use></svg>РћС‡РёСЃС‚РёС‚СЊ РёСЃС‚РѕСЂРёСЋ</button>
+        {% if may_write %}<a href="{% url 'chat:poll_create' conversation.pk %}"><svg><use href="{% static 'icons.svg' %}#check"></use></svg>Создать опрос</a>{% endif %}
+        {% if conversation.kind == "channel" and may_admin %}<a href="{% url 'chat:scheduled_posts' conversation.pk %}"><svg><use href="{% static 'icons.svg' %}#clock"></use></svg>Отложенные публикации</a>{% endif %}
+        <button type="button" data-chat-action="clear"><svg><use href="{% static 'icons.svg' %}#trash"></use></svg>Очистить историю</button>
         {% if peer %}
         <div class="tg-menu-separator"></div>
         {% if blocked_by_me %}
         <button type="button" data-user-action="unblock" data-user-id="{{ peer.pk }}">
-          <svg><use href="{% static 'icons.svg' %}#check"></use></svg>Р Р°Р·Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ
+          <svg><use href="{% static 'icons.svg' %}#check"></use></svg>Разблокировать
         </button>
         {% else %}
         <button type="button" data-user-action="block" data-user-id="{{ peer.pk }}" class="danger-item">
-          <svg><use href="{% static 'icons.svg' %}#block"></use></svg>Р—Р°Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ
+          <svg><use href="{% static 'icons.svg' %}#block"></use></svg>Заблокировать
         </button>
         {% endif %}
         {% endif %}
         <div class="tg-menu-separator"></div>
         <button type="button" class="danger-item" data-chat-action="delete">
-          <svg><use href="{% static 'icons.svg' %}#trash"></use></svg>РЈРґР°Р»РёС‚СЊ С‡Р°С‚
+          <svg><use href="{% static 'icons.svg' %}#trash"></use></svg>Удалить чат
         </button>
       </div>
     </header>
 
     <div class="tg-inchat-search hidden" id="messageSearchPanel">
       <svg><use href="{% static 'icons.svg' %}#search"></use></svg>
-      <input id="messageSearchInput" autocomplete="off" placeholder="РџРѕРёСЃРє РІ СЌС‚РѕРј С‡Р°С‚Рµ">
+      <input id="messageSearchInput" autocomplete="off" placeholder="Поиск в этом чате">
       <span id="messageSearchCount"></span>
       <button class="tg-icon-btn" id="closeMessageSearch" type="button"><svg><use href="{% static 'icons.svg' %}#close"></use></svg></button>
       <div class="tg-message-search-results hidden" id="messageSearchResults"></div>
@@ -212,12 +212,12 @@
     {% if conversation.pinned_message %}
     <button class="tg-pinned" type="button" data-jump="{{ conversation.pinned_message_id }}">
       <span class="tg-pinned-line"></span>
-      <div><b>Р—Р°РєСЂРµРїР»РµРЅРѕ В· {{ pinned_rows|length }}</b><span>{{ conversation.pinned_message.body|truncatechars:120 }}</span></div><span class="tg-pinned-more" id="openPins">Р’СЃРµ</span>
+      <div><b>Закреплено · {{ pinned_rows|length }}</b><span>{{ conversation.pinned_message.body|truncatechars:120 }}</span></div><span class="tg-pinned-more" id="openPins">Все</span>
     </button>
     {% endif %}
 
     <section class="tg-messages" id="messageStream">
-      <div class="tg-history-label">РСЃС‚РѕСЂРёСЏ РїРµСЂРµРїРёСЃРєРё</div>
+      <div class="tg-history-label">История переписки</div>
 
       {% for m in message_rows %}
       <article class="tg-message {% if m.sender_id == user.id %}mine{% endif %}" id="msg-{{ m.pk }}" data-message-id="{{ m.pk }}" data-sender-id="{{ m.sender_id|default:'' }}">
@@ -228,34 +228,34 @@
         {% endif %}
 
         <div class="tg-bubble">
-          {% if m.forwarded_from %}<div class="tg-forward-label">РџРµСЂРµСЃР»Р°РЅРѕ РѕС‚ {{ m.forwarded_from.sender|default:"СѓРґР°Р»С‘РЅРЅРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ" }}</div>{% endif %}
+          {% if m.forwarded_from %}<div class="tg-forward-label">Переслано от {{ m.forwarded_from.sender|default:"удалённого пользователя" }}</div>{% endif %}
           {% if m.reply_to %}
           <button class="tg-reply-quote" data-jump="{{ m.reply_to_id }}" type="button">
-            <b>{{ m.reply_to.sender|default:"вЂ”" }}</b>
+            <b>{{ m.reply_to.sender|default:"—" }}</b>
             <span>{{ m.reply_to.body|truncatechars:100 }}</span>
           </button>
           {% endif %}
 
-          {% if m.sender_id != user.id %}<div class="tg-sender-name">{{ m.sender.display_name|default:"РЈРґР°Р»С‘РЅРЅС‹Р№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ" }}</div>{% endif %}
+          {% if m.sender_id != user.id %}<div class="tg-sender-name">{{ m.sender.display_name|default:"Удалённый пользователь" }}</div>{% endif %}
 
           {% if m.is_deleted %}
-            <div class="tg-deleted-message">РЎРѕРѕР±С‰РµРЅРёРµ СѓРґР°Р»РµРЅРѕ</div>
+            <div class="tg-deleted-message">Сообщение удалено</div>
           {% else %}
-            {% if m.kind == "poll" and m.poll %}<div class="tg-poll" data-poll-id="{{ m.poll.pk }}"><div class="tg-poll-question">{{ m.poll.question }}</div><div class="tg-poll-options">{% for option in m.poll.options.all %}<button type="button" class="tg-poll-option" data-poll-vote-url="{% url 'chat:poll_vote' m.poll.pk %}" data-option-id="{{ option.pk }}" {% if m.poll.is_closed %}disabled{% endif %}><span>{{ option.text }}</span><b>{{ option.votes.count }}</b></button>{% endfor %}</div><div class="tg-poll-meta">{{ m.poll.votes.count }} РіРѕР»РѕСЃРѕРІ{% if m.poll.anonymous %} В· Р°РЅРѕРЅРёРјРЅС‹Р№{% endif %}{% if m.poll.multiple_choice %} В· РЅРµСЃРєРѕР»СЊРєРѕ РІР°СЂРёР°РЅС‚РѕРІ{% endif %}{% if m.poll.is_closed %} В· Р·Р°РєСЂС‹С‚{% endif %}</div></div>{% elif m.kind == "sticker" and m.sticker %}<div class="tg-sticker-message"><img src="{{ m.sticker.image.url }}" alt="{{ m.sticker.title }}"><span>{{ m.sticker.emoji }}</span></div>{% elif m.body %}<div class="tg-message-text mention-render">{{ m.body|linebreaksbr }}</div>{% endif %}
+            {% if m.kind == "poll" and m.poll %}<div class="tg-poll" data-poll-id="{{ m.poll.pk }}"><div class="tg-poll-question">{{ m.poll.question }}</div><div class="tg-poll-options">{% for option in m.poll.options.all %}<button type="button" class="tg-poll-option" data-poll-vote-url="{% url 'chat:poll_vote' m.poll.pk %}" data-option-id="{{ option.pk }}" {% if m.poll.is_closed %}disabled{% endif %}><span>{{ option.text }}</span><b>{{ option.votes.count }}</b></button>{% endfor %}</div><div class="tg-poll-meta">{{ m.poll.votes.count }} голосов{% if m.poll.anonymous %} · анонимный{% endif %}{% if m.poll.multiple_choice %} · несколько вариантов{% endif %}{% if m.poll.is_closed %} · закрыт{% endif %}</div></div>{% elif m.kind == "sticker" and m.sticker %}<div class="tg-sticker-message"><img src="{{ m.sticker.image.url }}" alt="{{ m.sticker.title }}"><span>{{ m.sticker.emoji }}</span></div>{% elif m.body %}<div class="tg-message-text mention-render">{{ m.body|linebreaksbr }}</div>{% endif %}
 
             {% for a in m.attachments.all %}
               {% if a.scan_status == "infected" %}
-                <div class="tg-attachment-card tg-attachment-blocked"><div class="tg-attachment-icon">!</div><div><b>{{ a.original_name }}</b><span>Р¤Р°Р№Р» Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ РїСЂРѕРІРµСЂРєРѕР№ Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё</span></div></div>
+                <div class="tg-attachment-card tg-attachment-blocked"><div class="tg-attachment-icon">!</div><div><b>{{ a.original_name }}</b><span>Файл заблокирован проверкой безопасности</span></div></div>
               {% elif a.is_audio %}
-                <div class="tg-audio tg-voice-player" {% if a.scan_status == "pending" %}data-pending-attachment="{{ a.pk }}"{% endif %}><button class="tg-voice-play" type="button" aria-label="Р’РѕСЃРїСЂРѕРёР·РІРµСЃС‚Рё"><span>в–¶</span></button><div class="tg-voice-track"><div class="tg-voice-waveform" data-waveform></div><div class="tg-voice-time"><span data-current>0:00</span><span class="tg-voice-live-dot"></span><span data-duration>0:00</span></div></div><button class="tg-voice-speed" type="button" aria-label="РЎРєРѕСЂРѕСЃС‚СЊ">1Г—</button><audio preload="metadata" src="{% url 'chat:attachment_content' a.pk %}"></audio></div>
+                <div class="tg-audio tg-voice-player" {% if a.scan_status == "pending" %}data-pending-attachment="{{ a.pk }}"{% endif %}><button class="tg-voice-play" type="button" aria-label="Воспроизвести"><span>▶</span></button><div class="tg-voice-track"><div class="tg-voice-waveform" data-waveform></div><div class="tg-voice-time"><span data-current>0:00</span><span class="tg-voice-live-dot"></span><span data-duration>0:00</span></div></div><button class="tg-voice-speed" type="button" aria-label="Скорость">1×</button><audio preload="metadata" src="{% url 'chat:attachment_content' a.pk %}"></audio></div>
               {% elif a.is_image and member.media_previews and USER_PREF.auto_download_images %}
                 <button class="tg-photo" type="button" data-lightbox="{% url 'chat:attachment_content' a.pk %}" data-download="{% url 'chat:attachment_content' a.pk %}?download=1" {% if a.scan_status == "pending" %}data-pending-attachment="{{ a.pk }}"{% endif %}><img src="{% url 'chat:attachment_content' a.pk %}" alt="{{ a.original_name }}"></button>
               {% elif a.is_image %}
-                <button class="tg-attachment-card" type="button" data-lightbox="{% url 'chat:attachment_content' a.pk %}" data-download="{% url 'chat:attachment_content' a.pk %}?download=1" {% if a.scan_status == "pending" %}data-pending-attachment="{{ a.pk }}"{% endif %}><div class="tg-attachment-icon">рџ–ј</div><div><b>{{ a.original_name }}</b><span>РР·РѕР±СЂР°Р¶РµРЅРёРµ В· {{ a.size|filesizeformat }}</span></div></button>
+                <button class="tg-attachment-card" type="button" data-lightbox="{% url 'chat:attachment_content' a.pk %}" data-download="{% url 'chat:attachment_content' a.pk %}?download=1" {% if a.scan_status == "pending" %}data-pending-attachment="{{ a.pk }}"{% endif %}><div class="tg-attachment-icon">🖼</div><div><b>{{ a.original_name }}</b><span>Изображение · {{ a.size|filesizeformat }}</span></div></button>
               {% elif a.is_video %}
                 <div {% if a.scan_status == "pending" %}data-pending-attachment="{{ a.pk }}"{% endif %}><video class="tg-video" controls preload="metadata" src="{% url 'chat:attachment_content' a.pk %}"></video></div>
               {% else %}
-                <a class="tg-attachment-card" href="{% url 'chat:attachment_preview' a.pk %}" {% if a.scan_status == "pending" %}data-pending-attachment="{{ a.pk }}"{% endif %}><div class="tg-attachment-icon">рџ“„</div><div><b>{{ a.original_name }}</b><span>{{ a.size|filesizeformat }}{% if a.scan_status == "pending" %} В· РїСЂРѕРІРµСЂСЏРµРј{% endif %}</span></div></a>
+                <a class="tg-attachment-card" href="{% url 'chat:attachment_preview' a.pk %}" {% if a.scan_status == "pending" %}data-pending-attachment="{{ a.pk }}"{% endif %}><div class="tg-attachment-icon">📄</div><div><b>{{ a.original_name }}</b><span>{{ a.size|filesizeformat }}{% if a.scan_status == "pending" %} · проверяем{% endif %}</span></div></a>
               {% endif %}
             {% endfor %}
           {% endif %}
@@ -272,20 +272,20 @@
           {% endif %}
 
           <div class="tg-message-time">
-            {% if m.edited_at %}<span>РёР·РјРµРЅРµРЅРѕ</span>{% endif %}
+            {% if m.edited_at %}<span>изменено</span>{% endif %}
             <time datetime="{{ m.created_at|localtime|date:'c' }}" title="{{ m.created_at|localtime|date:'d.m.Y H:i:s' }}">{{ m.created_at|localtime|date:"H:i" }}</time>
-            {% if m.sender_id == user.id %}<span class="tg-read-mark{% if m|receipt_mark == 'вњ“вњ“' %} read{% endif %}" data-read-for="{{ m.pk }}">{{ m|receipt_mark }}</span>{% endif %}
+            {% if m.sender_id == user.id %}<span class="tg-read-mark{% if m|receipt_mark == '✓✓' %} read{% endif %}" data-read-for="{{ m.pk }}">{{ m|receipt_mark }}</span>{% endif %}
           </div>
 
           {% if not m.is_deleted %}
           <div class="tg-message-actions">
-            <button type="button" data-action="reply" title="РћС‚РІРµС‚РёС‚СЊ"><svg><use href="{% static 'icons.svg' %}#reply"></use></svg></button>
-            <button type="button" data-action="react" title="Р РµР°РєС†РёСЏ"><svg><use href="{% static 'icons.svg' %}#smile"></use></svg></button>
-            <button type="button" data-action="forward" title="РџРµСЂРµСЃР»Р°С‚СЊ"><svg><use href="{% static 'icons.svg' %}#forward"></use></svg></button>
-            {% if m.sender_id == user.id %}<button type="button" data-action="edit" title="РР·РјРµРЅРёС‚СЊ"><svg><use href="{% static 'icons.svg' %}#edit"></use></svg></button>{% endif %}
-            <button type="button" data-action="delete" title="РЈРґР°Р»РёС‚СЊ"><svg><use href="{% static 'icons.svg' %}#trash"></use></svg></button>
-            <button type="button" data-action="pin" title="Р—Р°РєСЂРµРїРёС‚СЊ"><svg><use href="{% static 'icons.svg' %}#pin"></use></svg></button>
-            {% if m.sender_id == user.id %}<button type="button" data-action="receipts" title="РљС‚Рѕ РїСЂРѕС‡РёС‚Р°Р»">вњ“вњ“</button>{% endif %}
+            <button type="button" data-action="reply" title="Ответить"><svg><use href="{% static 'icons.svg' %}#reply"></use></svg></button>
+            <button type="button" data-action="react" title="Реакция"><svg><use href="{% static 'icons.svg' %}#smile"></use></svg></button>
+            <button type="button" data-action="forward" title="Переслать"><svg><use href="{% static 'icons.svg' %}#forward"></use></svg></button>
+            {% if m.sender_id == user.id %}<button type="button" data-action="edit" title="Изменить"><svg><use href="{% static 'icons.svg' %}#edit"></use></svg></button>{% endif %}
+            <button type="button" data-action="delete" title="Удалить"><svg><use href="{% static 'icons.svg' %}#trash"></use></svg></button>
+            <button type="button" data-action="pin" title="Закрепить"><svg><use href="{% static 'icons.svg' %}#pin"></use></svg></button>
+            {% if m.sender_id == user.id %}<button type="button" data-action="receipts" title="Кто прочитал">✓✓</button>{% endif %}
           </div>
           {% endif %}
         </div>
@@ -297,8 +297,8 @@
       </div>
     </section>
 
-    <button class="tg-scroll-bottom hidden" id="scrollBottomBtn" type="button" title="Р’РЅРёР·">
-      <span class="tg-scroll-arrow">в†“</span>
+    <button class="tg-scroll-bottom hidden" id="scrollBottomBtn" type="button" title="Вниз">
+      <span class="tg-scroll-arrow">↓</span>
       <em id="scrollBottomCount" class="hidden"></em>
     </button>
 
@@ -306,44 +306,44 @@
     <section class="tg-composer-area">
       <div class="tg-reply-composer hidden" id="replyComposer">
         <span class="tg-reply-line"></span>
-        <div><b>РћС‚РІРµС‚</b><span id="replyText"></span></div>
+        <div><b>Ответ</b><span id="replyText"></span></div>
         <button type="button" id="cancelReply"><svg><use href="{% static 'icons.svg' %}#close"></use></svg></button>
       </div>
       <div class="tg-upload-progress hidden" id="uploadProgress"><span></span></div>
       <div class="tg-voice-recorder hidden" id="voiceRecorder" aria-live="polite">
-        <button type="button" class="tg-voice-cancel" id="cancelVoice" title="РћС‚РјРµРЅРёС‚СЊ">Г—</button>
+        <button type="button" class="tg-voice-cancel" id="cancelVoice" title="Отменить">×</button>
         <span class="tg-record-dot"></span><time id="voiceRecordTime">0:00</time>
-        <canvas id="voiceRecordWave" width="420" height="42" aria-label="РЈСЂРѕРІРµРЅСЊ Р·Р°РїРёСЃРё"></canvas>
-        <button type="button" class="tg-voice-send" id="sendVoice" title="РћС‚РїСЂР°РІРёС‚СЊ"><svg><use href="{% static 'icons.svg' %}#send"></use></svg></button>
+        <canvas id="voiceRecordWave" width="420" height="42" aria-label="Уровень записи"></canvas>
+        <button type="button" class="tg-voice-send" id="sendVoice" title="Отправить"><svg><use href="{% static 'icons.svg' %}#send"></use></svg></button>
       </div>
       <div class="tg-composer">
         <button class="tg-composer-icon" id="emojiButton" type="button"><svg><use href="{% static 'icons.svg' %}#smile"></use></svg></button>
-        <button class="tg-composer-icon" id="stickerButton" type="button" title="РЎС‚РёРєРµСЂС‹">вњ¦</button>
-        <button class="tg-composer-icon" id="attachButton" type="button" title="РџСЂРёРєСЂРµРїРёС‚СЊ"><svg><use href="{% static 'icons.svg' %}#paperclip"></use></svg></button>
+        <button class="tg-composer-icon" id="stickerButton" type="button" title="Стикеры">✦</button>
+        <button class="tg-composer-icon" id="attachButton" type="button" title="Прикрепить"><svg><use href="{% static 'icons.svg' %}#paperclip"></use></svg></button>
         <input id="fileInput" type="file" multiple hidden>
         <input id="mediaInput" type="file" accept="image/*,video/*" multiple hidden>
-        <textarea id="messageInput" rows="1" maxlength="10000" placeholder="РЎРѕРѕР±С‰РµРЅРёРµ"></textarea>
+        <textarea id="messageInput" rows="1" maxlength="10000" placeholder="Сообщение"></textarea>
         <button class="tg-composer-icon" id="voiceButton" type="button"><svg><use href="{% static 'icons.svg' %}#mic"></use></svg></button>
         <button class="tg-send" id="sendButton" type="button"><svg><use href="{% static 'icons.svg' %}#send"></use></svg></button>
       </div>
       <div class="tg-attach-panel hidden" id="attachPanel">
-        <button type="button" data-attach="media"><span class="tg-attach-icon media">в–Ј</span><div><b>Р¤РѕС‚Рѕ РёР»Рё РІРёРґРµРѕ</b><small>РР·РѕР±СЂР°Р¶РµРЅРёСЏ Рё СЂРѕР»РёРєРё</small></div></button>
-        <button type="button" data-attach="file"><span class="tg-attach-icon file">в–¤</span><div><b>Р¤Р°Р№Р»</b><small>Р”РѕРєСѓРјРµРЅС‚ РёР»Рё РґСЂСѓРіРѕР№ С„Р°Р№Р»</small></div></button>
+        <button type="button" data-attach="media"><span class="tg-attach-icon media">▣</span><div><b>Фото или видео</b><small>Изображения и ролики</small></div></button>
+        <button type="button" data-attach="file"><span class="tg-attach-icon file">▤</span><div><b>Файл</b><small>Документ или другой файл</small></div></button>
       </div>
-      <div class="tg-emoji-panel hidden" id="emojiPanel" aria-label="Р­РјРѕРґР·Рё">
-        <div class="tg-emoji-tabs" id="emojiTabs" role="tablist" aria-label="РљР°С‚РµРіРѕСЂРёРё СЌРјРѕРґР·Рё"></div>
-        <div class="tg-emoji-category-title" id="emojiCategoryTitle">РЎРјР°Р№Р»С‹ Рё Р»СЋРґРё</div>
+      <div class="tg-emoji-panel hidden" id="emojiPanel" aria-label="Эмодзи">
+        <div class="tg-emoji-tabs" id="emojiTabs" role="tablist" aria-label="Категории эмодзи"></div>
+        <div class="tg-emoji-category-title" id="emojiCategoryTitle">Смайлы и люди</div>
         <div class="tg-emoji-grid" id="emojiGrid"></div>
       </div>
-      <div class="tg-sticker-panel hidden" id="stickerPanel">{% for pack in sticker_packs %}<div class="sticker-pack-title">{{ pack.name }}</div><div class="sticker-picker-grid">{% for st in pack.stickers.all %}{% if st.active %}<button type="button" data-sticker-id="{{ st.pk }}" title="{{ st.title }}"><img src="{{ st.image.url }}" alt="{{ st.emoji }}"></button>{% endif %}{% endfor %}</div>{% empty %}<div class="tg-search-empty">Р”РѕР±Р°РІСЊС‚Рµ СЃРІРѕРё СЃС‚РёРєРµСЂС‹ РІ РЅР°СЃС‚СЂРѕР№РєР°С….</div>{% endfor %}</div>
+      <div class="tg-sticker-panel hidden" id="stickerPanel">{% for pack in sticker_packs %}<div class="sticker-pack-title">{{ pack.name }}</div><div class="sticker-picker-grid">{% for st in pack.stickers.all %}{% if st.active %}<button type="button" data-sticker-id="{{ st.pk }}" title="{{ st.title }}"><img src="{{ st.image.url }}" alt="{{ st.emoji }}"></button>{% endif %}{% endfor %}</div>{% empty %}<div class="tg-search-empty">Добавьте свои стикеры в настройках.</div>{% endfor %}</div>
       <div class="mention-suggest hidden" id="mentionSuggest"></div>
     </section>
     {% else %}
     <div class="tg-composer-disabled">
       <svg><use href="{% static 'icons.svg' %}#lock"></use></svg>
-      {% if blocked_by_me %}Р’С‹ Р·Р°Р±Р»РѕРєРёСЂРѕРІР°Р»Рё СЌС‚РѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ. Р Р°Р·Р±Р»РѕРєРёСЂСѓР№С‚Рµ РµРіРѕ, С‡С‚РѕР±С‹ РЅР°РїРёСЃР°С‚СЊ.
-      {% elif blocked_me %}РћС‚РїСЂР°РІРєР° СЃРѕРѕР±С‰РµРЅРёР№ РІ СЌС‚РѕС‚ РґРёР°Р»РѕРі РЅРµРґРѕСЃС‚СѓРїРЅР°.
-      {% else %}РћС‚РїСЂР°РІРєР° СЃРѕРѕР±С‰РµРЅРёР№ РѕС‚РєР»СЋС‡РµРЅР° РїРѕР»РёС‚РёРєРѕР№ РёР»Рё РїСЂР°РІР°РјРё СЌС‚РѕРіРѕ С‡Р°С‚Р°.{% endif %}
+      {% if blocked_by_me %}Вы заблокировали этого пользователя. Разблокируйте его, чтобы написать.
+      {% elif blocked_me %}Отправка сообщений в этот диалог недоступна.
+      {% else %}Отправка сообщений отключена политикой или правами этого чата.{% endif %}
     </div>
     {% endif %}
   </main>
@@ -358,37 +358,37 @@
         {% if peer.handle %}<div class="tg-handle">@{{ peer.handle }}</div>{% endif %}
         <div class="tg-info-status">{{ peer_presence }}</div>
       {% else %}
-        <div class="tg-info-status">{{ conversation.members.count }} СѓС‡Р°СЃС‚РЅРёРєРѕРІ В· {{ conversation.get_kind_display }}</div>
+        <div class="tg-info-status">{{ conversation.members.count }} участников · {{ conversation.get_kind_display }}</div>
       {% endif %}
     </div>
 
     {% if peer and peer.bio %}
-    <div class="tg-info-section"><label>Рћ СЃРµР±Рµ</label><p>{{ peer.bio }}</p></div>
+    <div class="tg-info-section"><label>О себе</label><p>{{ peer.bio }}</p></div>
     {% elif conversation.description %}
-    <div class="tg-info-section"><label>РћРїРёСЃР°РЅРёРµ</label><p>{{ conversation.description }}</p></div>
+    <div class="tg-info-section"><label>Описание</label><p>{{ conversation.description }}</p></div>
     {% endif %}
 
     <div class="tg-info-actions-grid">
-      <button type="button" data-chat-action="mute"><svg><use href="{% static 'icons.svg' %}{% if member.muted %}#bell{% else %}#bell-off{% endif %}"></use></svg><span>{% if member.muted %}Р’РєР»СЋС‡РёС‚СЊ Р·РІСѓРє{% else %}Р‘РµР· Р·РІСѓРєР°{% endif %}</span></button>
-      <button type="button" data-chat-action="pin"><svg><use href="{% static 'icons.svg' %}#pin"></use></svg><span>{% if member.is_pinned %}РћС‚РєСЂРµРїРёС‚СЊ{% else %}Р—Р°РєСЂРµРїРёС‚СЊ{% endif %}</span></button>
-      <a href="{% url 'chat:conversation_info' conversation.pk %}"><svg><use href="{% static 'icons.svg' %}#info"></use></svg><span>РџРѕРґСЂРѕР±РЅРµРµ</span></a>
+      <button type="button" data-chat-action="mute"><svg><use href="{% static 'icons.svg' %}{% if member.muted %}#bell{% else %}#bell-off{% endif %}"></use></svg><span>{% if member.muted %}Включить звук{% else %}Без звука{% endif %}</span></button>
+      <button type="button" data-chat-action="pin"><svg><use href="{% static 'icons.svg' %}#pin"></use></svg><span>{% if member.is_pinned %}Открепить{% else %}Закрепить{% endif %}</span></button>
+      <a href="{% url 'chat:conversation_info' conversation.pk %}"><svg><use href="{% static 'icons.svg' %}#info"></use></svg><span>Подробнее</span></a>
     </div>
 
     <div class="tg-info-section">
-      <label>РњР°С‚РµСЂРёР°Р»С‹ С‡Р°С‚Р°</label>
-      <div class="tg-media-tabs" id="mediaTabs"><button class="active" data-media-kind="media">РњРµРґРёР°</button><button data-media-kind="files">Р¤Р°Р№Р»С‹</button><button data-media-kind="links">РЎСЃС‹Р»РєРё</button><button data-media-kind="voice">Р“РѕР»РѕСЃРѕРІС‹Рµ</button></div>
-      <div class="tg-media-browser" id="mediaBrowser"><div class="tg-media-counters"><span>{{ shared_media_count }} РјРµРґРёР°</span><span>{{ shared_files_count }} С„Р°Р№Р»РѕРІ</span></div></div>
+      <label>Материалы чата</label>
+      <div class="tg-media-tabs" id="mediaTabs"><button class="active" data-media-kind="media">Медиа</button><button data-media-kind="files">Файлы</button><button data-media-kind="links">Ссылки</button><button data-media-kind="voice">Голосовые</button></div>
+      <div class="tg-media-browser" id="mediaBrowser"><div class="tg-media-counters"><span>{{ shared_media_count }} медиа</span><span>{{ shared_files_count }} файлов</span></div></div>
     </div>
 
     <div class="tg-info-section">
       <a class="tg-info-row" href="{% url 'chat:conversation_info' conversation.pk %}">
         <svg><use href="{% static 'icons.svg' %}#users"></use></svg>
-        <div><b>РЈС‡Р°СЃС‚РЅРёРєРё Рё РїСЂР°РІР°</b><span>РќР°СЃС‚СЂРѕР№РєРё СЌС‚РѕРіРѕ С‡Р°С‚Р°</span></div>
+        <div><b>Участники и права</b><span>Настройки этого чата</span></div>
       </a>
       {% if user.is_developer %}
       <a class="tg-info-row developer-row" href="{% url 'control:conversation_audit' conversation.pk %}">
         <svg><use href="{% static 'icons.svg' %}#shield"></use></svg>
-        <div><b>Forensic view</b><span>РџРѕР»РЅР°СЏ РЅРµРёР·РјРµРЅСЏРµРјР°СЏ РёСЃС‚РѕСЂРёСЏ</span></div>
+        <div><b>Forensic view</b><span>Полная неизменяемая история</span></div>
       </a>
       {% endif %}
     </div>
@@ -397,18 +397,18 @@
     <div class="tg-info-section">
       {% if blocked_by_me %}
       <button class="tg-info-row action-row" data-user-action="unblock" data-user-id="{{ peer.pk }}">
-        <svg><use href="{% static 'icons.svg' %}#check"></use></svg><div><b>Р Р°Р·Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ</b><span>РЎРЅРѕРІР° СЂР°Р·СЂРµС€РёС‚СЊ РѕР±С‰РµРЅРёРµ</span></div>
+        <svg><use href="{% static 'icons.svg' %}#check"></use></svg><div><b>Разблокировать</b><span>Снова разрешить общение</span></div>
       </button>
       {% else %}
       <button class="tg-info-row action-row danger-row" data-user-action="block" data-user-id="{{ peer.pk }}">
-        <svg><use href="{% static 'icons.svg' %}#block"></use></svg><div><b>Р—Р°Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ</b><span>Р—Р°РїСЂРµС‚РёС‚СЊ Р»РёС‡РЅС‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ</span></div>
+        <svg><use href="{% static 'icons.svg' %}#block"></use></svg><div><b>Заблокировать</b><span>Запретить личные сообщения</span></div>
       </button>
       {% endif %}
       <button class="tg-info-row action-row danger-row" data-chat-action="delete">
-        <svg><use href="{% static 'icons.svg' %}#trash"></use></svg><div><b>РЈРґР°Р»РёС‚СЊ С‡Р°С‚</b><span>Telegram-РїРѕРґРѕР±РЅРѕРµ СѓРґР°Р»РµРЅРёРµ РёСЃС‚РѕСЂРёРё</span></div>
+        <svg><use href="{% static 'icons.svg' %}#trash"></use></svg><div><b>Удалить чат</b><span>Telegram-подобное удаление истории</span></div>
       </button>
       <button class="tg-info-row action-row" data-chat-action="clear">
-        <svg><use href="{% static 'icons.svg' %}#trash"></use></svg><div><b>РћС‡РёСЃС‚РёС‚СЊ РёСЃС‚РѕСЂРёСЋ</b><span>РЈРґР°Р»РёС‚СЊ СЃРѕРѕР±С‰РµРЅРёСЏ, РЅРµ СѓРґР°Р»СЏСЏ С‡Р°С‚</span></div>
+        <svg><use href="{% static 'icons.svg' %}#trash"></use></svg><div><b>Очистить историю</b><span>Удалить сообщения, не удаляя чат</span></div>
       </button>
     </div>
     {% endif %}
@@ -416,15 +416,15 @@
 
   <div class="tg-modal hidden" id="editModal">
     <div class="tg-modal-card">
-      <div class="tg-modal-head"><h3>Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ СЃРѕРѕР±С‰РµРЅРёРµ</h3><button class="tg-icon-btn close-modal"><svg><use href="{% static 'icons.svg' %}#close"></use></svg></button></div>
+      <div class="tg-modal-head"><h3>Редактировать сообщение</h3><button class="tg-icon-btn close-modal"><svg><use href="{% static 'icons.svg' %}#close"></use></svg></button></div>
       <textarea id="editText" rows="5"></textarea>
-      <div class="tg-modal-actions"><button class="tg-button secondary close-modal">РћС‚РјРµРЅР°</button><button class="tg-button primary" id="saveEdit">РЎРѕС…СЂР°РЅРёС‚СЊ</button></div>
+      <div class="tg-modal-actions"><button class="tg-button secondary close-modal">Отмена</button><button class="tg-button primary" id="saveEdit">Сохранить</button></div>
     </div>
   </div>
 
   <div class="tg-modal hidden" id="forwardModal">
     <div class="tg-modal-card">
-      <div class="tg-modal-head"><h3>РџРµСЂРµСЃР»Р°С‚СЊ СЃРѕРѕР±С‰РµРЅРёРµ</h3><button class="tg-icon-btn close-modal"><svg><use href="{% static 'icons.svg' %}#close"></use></svg></button></div>
+      <div class="tg-modal-head"><h3>Переслать сообщение</h3><button class="tg-icon-btn close-modal"><svg><use href="{% static 'icons.svg' %}#close"></use></svg></button></div>
       <div class="tg-forward-list">
         {% for card in cards %}
         {% if card.conversation.pk != conversation.pk %}
@@ -440,66 +440,66 @@
 
   <div class="tg-modal hidden" id="messageDeleteModal">
     <div class="tg-modal-card small-card">
-      <div class="tg-modal-head"><h3>РЈРґР°Р»РёС‚СЊ СЃРѕРѕР±С‰РµРЅРёРµ?</h3><button class="tg-icon-btn close-modal"><svg><use href="{% static 'icons.svg' %}#close"></use></svg></button></div>
-      <p>Р’С‹Р±РµСЂРёС‚Рµ, РєР°Рє СѓРґР°Р»РёС‚СЊ СЃРѕРѕР±С‰РµРЅРёРµ.</p>
-      <button class="tg-choice-btn" id="deleteMessageSelf">РЈРґР°Р»РёС‚СЊ С‚РѕР»СЊРєРѕ Сѓ РјРµРЅСЏ</button>
-      {% if request.user.is_developer and conversation.kind == "direct" %}<button class="tg-choice-btn" id="deleteMessagePeer">РЈРґР°Р»РёС‚СЊ С‚РѕР»СЊРєРѕ Сѓ СЃРѕР±РµСЃРµРґРЅРёРєР°</button>{% endif %}
-      <button class="tg-choice-btn danger-choice" id="deleteMessageEveryone">РЈРґР°Р»РёС‚СЊ Сѓ РІСЃРµС…</button>
+      <div class="tg-modal-head"><h3>Удалить сообщение?</h3><button class="tg-icon-btn close-modal"><svg><use href="{% static 'icons.svg' %}#close"></use></svg></button></div>
+      <p>Выберите, как удалить сообщение.</p>
+      <button class="tg-choice-btn" id="deleteMessageSelf">Удалить только у меня</button>
+      {% if request.user.is_developer and conversation.kind == "direct" %}<button class="tg-choice-btn" id="deleteMessagePeer">Удалить только у собеседника</button>{% endif %}
+      <button class="tg-choice-btn danger-choice" id="deleteMessageEveryone">Удалить у всех</button>
     </div>
   </div>
 
   <div class="tg-modal hidden" id="chatDeleteModal">
     <div class="tg-modal-card small-card">
-      <div class="tg-modal-head"><h3>РЈРґР°Р»РёС‚СЊ С‡Р°С‚?</h3><button class="tg-icon-btn close-modal"><svg><use href="{% static 'icons.svg' %}#close"></use></svg></button></div>
-      <p>Р§Р°С‚ РёСЃС‡РµР·РЅРµС‚ РёР· РІР°С€РµРіРѕ СЃРїРёСЃРєР°.</p>
-      <button class="tg-choice-btn" id="deleteChatSelf">РЈРґР°Р»РёС‚СЊ С‚РѕР»СЊРєРѕ Сѓ РјРµРЅСЏ</button>
+      <div class="tg-modal-head"><h3>Удалить чат?</h3><button class="tg-icon-btn close-modal"><svg><use href="{% static 'icons.svg' %}#close"></use></svg></button></div>
+      <p>Чат исчезнет из вашего списка.</p>
+      <button class="tg-choice-btn" id="deleteChatSelf">Удалить только у меня</button>
       {% if conversation.kind == "direct" %}
-      {% if request.user.is_developer %}<button class="tg-choice-btn" id="deleteChatPeer">РЈРґР°Р»РёС‚СЊ С‚РѕР»СЊРєРѕ Сѓ СЃРѕР±РµСЃРµРґРЅРёРєР°</button>{% endif %}
-      <button class="tg-choice-btn danger-choice" id="deleteChatEveryone">РЈРґР°Р»РёС‚СЊ Сѓ РѕР±РѕРёС…</button>
+      {% if request.user.is_developer %}<button class="tg-choice-btn" id="deleteChatPeer">Удалить только у собеседника</button>{% endif %}
+      <button class="tg-choice-btn danger-choice" id="deleteChatEveryone">Удалить у обоих</button>
       {% endif %}
     </div>
   </div>
 
   <div class="tg-modal hidden" id="chatClearModal">
     <div class="tg-modal-card small-card">
-      <div class="tg-modal-head"><h3>РћС‡РёСЃС‚РёС‚СЊ РёСЃС‚РѕСЂРёСЋ?</h3><button class="tg-icon-btn close-modal"><svg><use href="{% static 'icons.svg' %}#close"></use></svg></button></div>
-      <p>РЎРѕРѕР±С‰РµРЅРёСЏ РёСЃС‡РµР·РЅСѓС‚, РЅРѕ С‡Р°С‚ РѕСЃС‚Р°РЅРµС‚СЃСЏ РІ СЃРїРёСЃРєРµ.</p>
-      <button class="tg-choice-btn" id="clearChatSelf">РћС‡РёСЃС‚РёС‚СЊ С‚РѕР»СЊРєРѕ Сѓ РјРµРЅСЏ</button>
-      {% if request.user.is_developer and conversation.kind == "direct" %}<button class="tg-choice-btn" id="clearChatPeer">РћС‡РёСЃС‚РёС‚СЊ С‚РѕР»СЊРєРѕ Сѓ СЃРѕР±РµСЃРµРґРЅРёРєР°</button>{% endif %}
-      {% if conversation.kind == "direct" %}<button class="tg-choice-btn danger-choice" id="clearChatEveryone">РћС‡РёСЃС‚РёС‚СЊ Сѓ РѕР±РѕРёС…</button>{% endif %}
+      <div class="tg-modal-head"><h3>Очистить историю?</h3><button class="tg-icon-btn close-modal"><svg><use href="{% static 'icons.svg' %}#close"></use></svg></button></div>
+      <p>Сообщения исчезнут, но чат останется в списке.</p>
+      <button class="tg-choice-btn" id="clearChatSelf">Очистить только у меня</button>
+      {% if request.user.is_developer and conversation.kind == "direct" %}<button class="tg-choice-btn" id="clearChatPeer">Очистить только у собеседника</button>{% endif %}
+      {% if conversation.kind == "direct" %}<button class="tg-choice-btn danger-choice" id="clearChatEveryone">Очистить у обоих</button>{% endif %}
     </div>
   </div>
 
-  <div class="tg-lightbox hidden" id="photoLightbox" role="dialog" aria-modal="true" aria-label="РџСЂРѕСЃРјРѕС‚СЂ С„РѕС‚РѕРіСЂР°С„РёРё">
-    <button type="button" class="tg-lightbox-close" id="photoLightboxClose" aria-label="Р—Р°РєСЂС‹С‚СЊ">Г—</button>
+  <div class="tg-lightbox hidden" id="photoLightbox" role="dialog" aria-modal="true" aria-label="Просмотр фотографии">
+    <button type="button" class="tg-lightbox-close" id="photoLightboxClose" aria-label="Закрыть">×</button>
     <img id="photoLightboxImage" alt="">
-    <a class="tg-lightbox-download" id="photoLightboxDownload" href="#">РЎРєР°С‡Р°С‚СЊ</a>
+    <a class="tg-lightbox-download" id="photoLightboxDownload" href="#">Скачать</a>
   </div>
 
   <div class="tg-reaction-popover hidden" id="reactionPopover">
-    {% for e in "рџ‘Ќ вќ¤пёЏ рџ‚ рџ”Ґ рџ‘Џ рџЌ рџЋ‰ рџ¤ќ рџ™Џ рџ’Ї рџў рџЎ рџ¤” рџ¤Ј рџ® рџ‘Ћ"|split:" " %}<button type="button">{{ e }}</button>{% endfor %}
+    {% for e in "👍 ❤️ 😂 🔥 👏 😍 🎉 🤝 🙏 💯 😢 😡 🤔 🤣 😮 👎"|split:" " %}<button type="button">{{ e }}</button>{% endfor %}
   </div>
   <div class="tg-context-menu hidden" id="messageContextMenu">
-    <button type="button" data-context-action="reply">в†© <span>РћС‚РІРµС‚РёС‚СЊ</span></button>
-    <button type="button" data-context-action="copy">в§‰ <span>РљРѕРїРёСЂРѕРІР°С‚СЊ</span></button>
-    <button type="button" data-context-action="forward">в†Є <span>РџРµСЂРµСЃР»Р°С‚СЊ</span></button>
-    <button type="button" data-context-action="edit" data-owner-only="1">вњЋ <span>РР·РјРµРЅРёС‚СЊ</span></button>
-    <button type="button" data-context-action="pin">вЊ– <span>Р—Р°РєСЂРµРїРёС‚СЊ</span></button>
-    <button type="button" data-context-action="receipts" data-owner-only="1">вњ“вњ“ <span>РљС‚Рѕ РїСЂРѕС‡РёС‚Р°Р»</span></button>
+    <button type="button" data-context-action="reply">↩ <span>Ответить</span></button>
+    <button type="button" data-context-action="copy">⧉ <span>Копировать</span></button>
+    <button type="button" data-context-action="forward">↪ <span>Переслать</span></button>
+    <button type="button" data-context-action="edit" data-owner-only="1">✎ <span>Изменить</span></button>
+    <button type="button" data-context-action="pin">⌖ <span>Закрепить</span></button>
+    <button type="button" data-context-action="receipts" data-owner-only="1">✓✓ <span>Кто прочитал</span></button>
     <div></div>
-    <button type="button" class="danger-item" data-context-action="delete">Г— <span>РЈРґР°Р»РёС‚СЊ</span></button>
+    <button type="button" class="danger-item" data-context-action="delete">× <span>Удалить</span></button>
   </div>
 
-  <div class="tg-modal hidden" id="pinsModal"><div class="tg-modal-card"><div class="tg-modal-head"><h3>Р—Р°РєСЂРµРїР»С‘РЅРЅС‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ</h3><button class="tg-icon-btn close-modal">Г—</button></div><div id="pinsList"></div></div></div>
-  <div class="tg-modal hidden" id="receiptsModal"><div class="tg-modal-card"><div class="tg-modal-head"><h3>Р”РѕСЃС‚Р°РІРєР° Рё РїСЂРѕС‡С‚РµРЅРёРµ</h3><button class="tg-icon-btn close-modal">Г—</button></div><div id="receiptsList"></div></div></div>
+  <div class="tg-modal hidden" id="pinsModal"><div class="tg-modal-card"><div class="tg-modal-head"><h3>Закреплённые сообщения</h3><button class="tg-icon-btn close-modal">×</button></div><div id="pinsList"></div></div></div>
+  <div class="tg-modal hidden" id="receiptsModal"><div class="tg-modal-card"><div class="tg-modal-head"><h3>Доставка и прочтение</h3><button class="tg-icon-btn close-modal">×</button></div><div id="receiptsList"></div></div></div>
 
   <div class="call-overlay hidden" id="callOverlay">
     <div class="call-card">
       <div class="tg-avatar tg-info-avatar">{% if peer and peer.avatar_url %}<img src="{{ peer.avatar_url }}" alt="">{% else %}<span>{{ chat_title|slice:":1"|upper }}</span>{% endif %}</div>
-      <h2 id="callTitle">{{ chat_title }}</h2><p id="callStatus">РЎРѕРµРґРёРЅРµРЅРёРµвЂ¦</p>
+      <h2 id="callTitle">{{ chat_title }}</h2><p id="callStatus">Соединение…</p>
       <audio id="remoteAudio" autoplay></audio>
       <div class="call-controls">
-        <button id="acceptCall" class="call-btn accept hidden" type="button">вњ“</button>
+        <button id="acceptCall" class="call-btn accept hidden" type="button">✓</button>
         <button id="toggleMic" class="call-btn" type="button"><svg><use href="{% static 'icons.svg' %}#mic"></use></svg></button>
         <button id="endCall" class="call-btn end" type="button"><svg><use href="{% static 'icons.svg' %}#phone"></use></svg></button>
       </div>
@@ -511,13 +511,13 @@
     <div class="tg-empty-center">
       <div class="rmes-empty-logo-wrap" aria-hidden="true"><img class="rmes-empty-logo" src="{% static 'rmes-icon.png' %}" alt=""></div>
       <h1>{{ APP_NAME }}</h1>
-      <p>Р’С‹Р±РµСЂРёС‚Рµ С‡Р°С‚ СЃР»РµРІР° РёР»Рё РЅР°Р№РґРёС‚Рµ СЃРѕС‚СЂСѓРґРЅРёРєР° С‡РµСЂРµР· СѓРјРЅС‹Р№ РїРѕРёСЃРє {{ APP_NAME }}.</p>
-      <div><a class="tg-button primary" href="{% url 'chat:new_direct' %}">РќРѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ</a><a class="tg-button secondary" href="{% url 'chat:new_group' %}">РЎРѕР·РґР°С‚СЊ РіСЂСѓРїРїСѓ</a></div>
+      <p>Выберите чат слева или найдите сотрудника через умный поиск {{ APP_NAME }}.</p>
+      <div><a class="tg-button primary" href="{% url 'chat:new_direct' %}">Новое сообщение</a><a class="tg-button secondary" href="{% url 'chat:new_group' %}">Создать группу</a></div>
     </div>
   </main>
   <aside class="tg-info-panel tg-info-empty"></aside>
   {% endif %}
-    <div class="tg-notification-panel hidden" id="notificationPanel"><div class="notification-panel-head"><b>РЈРІРµРґРѕРјР»РµРЅРёСЏ</b><button type="button" id="readAllNotifications">РџСЂРѕС‡РёС‚Р°С‚СЊ РІСЃРµ</button></div><div id="notificationList">{% for n in notification_rows %}<a class="notification-row {% if not n.read_at %}unread{% endif %}" href="{% if n.message_id %}{% url 'chat:conversation' n.message.conversation_id %}?jump={{ n.message_id }}#msg-{{ n.message_id }}{% else %}#{% endif %}"><div class="tg-avatar tg-avatar-sm">{% if n.actor and n.actor.avatar_url %}<img src="{{ n.actor.avatar_url }}" alt="">{% else %}<span>!</span>{% endif %}</div><div><b>{{ n.title }}</b><span>{{ n.body|truncatechars:120 }}</span><time datetime="{{ n.created_at|localtime|date:'c' }}">{{ n.created_at|localtime|date:"d.m H:i" }}</time></div></a>{% empty %}<div class="tg-search-empty">РќРѕРІС‹С… СѓРІРµРґРѕРјР»РµРЅРёР№ РЅРµС‚.</div>{% endfor %}</div></div>
+    <div class="tg-notification-panel hidden" id="notificationPanel"><div class="notification-panel-head"><b>Уведомления</b><button type="button" id="readAllNotifications">Прочитать все</button></div><div id="notificationList">{% for n in notification_rows %}<a class="notification-row {% if not n.read_at %}unread{% endif %}" href="{% if n.message_id %}{% url 'chat:conversation' n.message.conversation_id %}?jump={{ n.message_id }}#msg-{{ n.message_id }}{% else %}#{% endif %}"><div class="tg-avatar tg-avatar-sm">{% if n.actor and n.actor.avatar_url %}<img src="{{ n.actor.avatar_url }}" alt="">{% else %}<span>!</span>{% endif %}</div><div><b>{{ n.title }}</b><span>{{ n.body|truncatechars:120 }}</span><time datetime="{{ n.created_at|localtime|date:'c' }}">{{ n.created_at|localtime|date:"d.m H:i" }}</time></div></a>{% empty %}<div class="tg-search-empty">Новых уведомлений нет.</div>{% endfor %}</div></div>
 
 </div>
 {% endblock %}
@@ -578,4 +578,3 @@ window.R_MES_CHAT = {
 <script src="{% static 'chat.js' %}?v={{ APP_VERSION|urlencode }}"></script>
 {% endif %}
 {% endblock %}
-
