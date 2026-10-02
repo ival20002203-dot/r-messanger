@@ -1,4 +1,4 @@
-window.RMesUI={
+﻿window.RMesUI={
   csrf(){
     const m=document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
     return m?decodeURIComponent(m[1]):"";
@@ -24,8 +24,8 @@ window.RMesUI={
       },
       body:new URLSearchParams(data)
     });
-    const j=await r.json().catch(()=>({detail:"Ошибка сервера"}));
-    if(!r.ok)throw new Error(j.detail||"Ошибка");
+    const j=await r.json().catch(()=>({detail:"РћС€РёР±РєР° СЃРµСЂРІРµСЂР°"}));
+    if(!r.ok)throw new Error(j.detail||"РћС€РёР±РєР°");
     return j;
   },
   debounce(fn,delay=160){
@@ -45,9 +45,9 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(!networkStatus)return;clearTimeout(networkStatusTimer);networkStatus.textContent=text;networkStatus.className=`rmes-network-status ${kind}`.trim();
     if(kind==="success")networkStatusTimer=setTimeout(()=>networkStatus.classList.add("hidden"),1800);
   };
-  if(!navigator.onLine)showNetworkStatus("Нет сети · переподключаюсь…","error");
-  window.addEventListener("offline",()=>showNetworkStatus("Нет сети · переподключаюсь…","error"));
-  window.addEventListener("online",()=>showNetworkStatus("Связь восстановлена","success"));
+  if(!navigator.onLine)showNetworkStatus("РќРµС‚ СЃРµС‚Рё В· РїРµСЂРµРїРѕРґРєР»СЋС‡Р°СЋСЃСЊвЂ¦","error");
+  window.addEventListener("offline",()=>showNetworkStatus("РќРµС‚ СЃРµС‚Рё В· РїРµСЂРµРїРѕРґРєР»СЋС‡Р°СЋСЃСЊвЂ¦","error"));
+  window.addEventListener("online",()=>showNetworkStatus("РЎРІСЏР·СЊ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅР°","success"));
   setTimeout(()=>document.querySelectorAll(".toast").forEach(x=>x.remove()),4200);
 
   const shellUserId=document.querySelector(".tg-app")?.dataset.userId||"anonymous";
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     const draft=localStorage.getItem(`rmes:draft:${shellUserId}:${id}`);
     const preview=item.querySelector(".tg-chat-preview");
     if(draft&&preview){
-      preview.innerHTML=`<span class="draft-prefix">Черновик:</span> ${RMesUI.esc(draft.slice(0,52))}`;
+      preview.innerHTML=`<span class="draft-prefix">Р§РµСЂРЅРѕРІРёРє:</span> ${RMesUI.esc(draft.slice(0,52))}`;
       item.classList.add("has-draft");
     }
   });
@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded",()=>{
           <div class="tg-avatar tg-avatar-sm">${n.avatar?`<img src="${n.avatar}" alt="">`:"<span>!</span>"}</div>
           <div><b>${RMesUI.esc(n.title||n.actor||"R-Messanger")}</b><span>${RMesUI.esc(n.body||"")}</span><time>${RMesUI.esc(n.time||"")}</time></div>
         </a>`).join("")
-      :'<div class="tg-search-empty">Новых уведомлений нет.</div>';
+      :'<div class="tg-search-empty">РќРѕРІС‹С… СѓРІРµРґРѕРјР»РµРЅРёР№ РЅРµС‚.</div>';
   }
   function recomputeChatUnreadTotal(){
     let total=0;
@@ -181,10 +181,10 @@ document.addEventListener("DOMContentLoaded",()=>{
     let wrap=document.querySelector("#rmesMessageToastStack");
     if(!wrap){wrap=document.createElement("div");wrap.id="rmesMessageToastStack";wrap.className="rmes-message-toast-stack";document.body.appendChild(wrap)}
     const el=document.createElement("button");el.type="button";el.className="rmes-message-toast";
-    const safeTitle=RMesUI.esc(title||"R-Messanger"),safeBody=RMesUI.esc(body||"Новое сообщение");
+    const safeTitle=RMesUI.esc(title||"R-Messanger"),safeBody=RMesUI.esc(body||"РќРѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ");
     let avatarHtml='<img class="rmes-message-toast-logo" src="/static/rmes-icon.png" alt="R-Messanger">';
     if(avatar)avatarHtml+=`<img class="rmes-message-toast-avatar" src="${RMesUI.esc(avatar)}" alt="">`;
-    el.innerHTML=`${avatarHtml}<span class="rmes-message-toast-copy"><small>R-Messanger</small><b>${safeTitle}</b><em>${safeBody}</em></span><span class="rmes-message-toast-close">×</span>`;
+    el.innerHTML=`${avatarHtml}<span class="rmes-message-toast-copy"><small>R-Messanger</small><b>${safeTitle}</b><em>${safeBody}</em></span><span class="rmes-message-toast-close">Г—</span>`;
     el.addEventListener("click",e=>{if(e.target.closest(".rmes-message-toast-close")){el.remove();return}location.href=url||"/"});
     wrap.appendChild(el);requestAnimationFrame(()=>el.classList.add("show"));
     setTimeout(()=>{el.classList.remove("show");setTimeout(()=>el.remove(),180)},6500);
@@ -198,7 +198,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     const locked=Boolean(document.querySelector("#appLockScreen"));
     const senderName=item.sender?.name||item.sender_name||item.sender||item.chat||"R-Messanger";
     const title=locked||globalCfg.showSenderName===false?"R-Messanger":senderName;
-    const body=locked||globalCfg.showMessagePreview===false?"Новое сообщение":(item.body||"Новое сообщение");
+    const body=locked||globalCfg.showMessagePreview===false?"РќРѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ":(item.body||"РќРѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ");
     const url=item.url||`/c/${item.conversation_id}/`;
     let avatar=item.avatar||item.sender?.avatar||"";try{if(avatar)avatar=new URL(avatar,location.origin).toString()}catch(_){}
     if(globalCfg.notificationSound)notificationPing();
@@ -233,7 +233,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   notificationBell?.addEventListener("click",()=>refreshNotifications());
   refreshNotifications();
   // WebSocket is primary; 2.5 s polling is a deliberate recovery path for sleeping/minimized clients.
-  setInterval(refreshNotifications,1500);
+  setInterval(refreshNotifications,8000);
 
   if(globalCfg.desktopNotifications&&!window.RMesDesktop?.showNotification&&"Notification" in window&&Notification.permission==="default"){
     setTimeout(()=>Notification.requestPermission().catch(()=>{}),900);
@@ -245,8 +245,8 @@ document.addEventListener("DOMContentLoaded",()=>{
     const preview=card.querySelector(".tg-chat-preview"),time=card.querySelector(".tg-chat-topline time");
     const mine=Number(item.sender?.id||0)===Number(globalCfg.userId||0);
     let body=String(item.body||"").replace(/\s+/g," ").trim();
-    if(!body){const a=(item.attachments||[])[0];body=a?.content_type?.startsWith("image/")?"Фото":a?.content_type?.startsWith("video/")?"Видео":a?.content_type?.startsWith("audio/")?"Голосовое сообщение":a?`Файл: ${a.name||"вложение"}`:"Новое сообщение"}
-    if(preview)preview.innerHTML=`${mine?'<span class="you-prefix">Вы:</span> ':""}${RMesUI.esc(body.length>58?body.slice(0,57)+"…":body)}`;
+    if(!body){const a=(item.attachments||[])[0];body=a?.content_type?.startsWith("image/")?"Р¤РѕС‚Рѕ":a?.content_type?.startsWith("video/")?"Р’РёРґРµРѕ":a?.content_type?.startsWith("audio/")?"Р“РѕР»РѕСЃРѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ":a?`Р¤Р°Р№Р»: ${a.name||"РІР»РѕР¶РµРЅРёРµ"}`:"РќРѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ"}
+    if(preview)preview.innerHTML=`${mine?'<span class="you-prefix">Р’С‹:</span> ':""}${RMesUI.esc(body.length>58?body.slice(0,57)+"вЂ¦":body)}`;
     if(time)time.textContent=displayClock(item);
     const list=card.parentElement;if(list&&list.firstElementChild!==card)list.prepend(card);
     if(!mine&&String(item.conversation_id)!==String(globalCfg.currentConversationId||"")){
@@ -261,11 +261,11 @@ document.addEventListener("DOMContentLoaded",()=>{
     const avatar=peer?.avatar?`<img src="${RMesUI.esc(peer.avatar)}" alt="">`:`<span>${row.kind==="channel"?"#":RMesUI.esc(initial)}</span>`;
     const peerHidden=Boolean(peer?.hidden)||(Boolean(peer?.developer)&&!globalCfg.isDeveloper);
     const online=peer&&!peerHidden?`<span class="tg-online-dot ${peer.online?"":"hidden"}" data-online-dot></span>`:"";
-    const last=row.last||{},preview=last.body||"Нет сообщений";
+    const last=row.last||{},preview=last.body||"РќРµС‚ СЃРѕРѕР±С‰РµРЅРёР№";
     return `<a class="tg-chat-item ${String(row.id)===String(globalCfg.currentConversationId||"")?"active":""}" data-conversation-id="${RMesUI.esc(row.id)}" data-peer-id="${peer?.id||""}" data-soft-nav="1" href="${RMesUI.esc(row.url||(`/c/${row.id}/`))}">
       <div class="tg-avatar-wrap"><div class="tg-avatar">${avatar}</div>${online}</div>
-      <div class="tg-chat-copy"><div class="tg-chat-topline"><div class="tg-chat-title">${row.pinned?'<span class="mini-text-icon">📌</span>':""}<span>${RMesUI.esc(row.title||"Чат")}</span>${row.muted?'<span class="mini-text-icon">🔕</span>':""}</div><time>${last.created_at?displayClock(last):""}</time></div>
-      <div class="tg-chat-bottomline"><div class="tg-chat-preview">${last.mine?'<span class="you-prefix">Вы:</span> ':""}${RMesUI.esc(preview.length>54?preview.slice(0,53)+"…":preview)}</div>${row.unread?`<span class="tg-unread">${row.unread>99?"99+":row.unread}</span>`:""}</div></div></a>`;
+      <div class="tg-chat-copy"><div class="tg-chat-topline"><div class="tg-chat-title">${row.pinned?'<span class="mini-text-icon">рџ“Њ</span>':""}<span>${RMesUI.esc(row.title||"Р§Р°С‚")}</span>${row.muted?'<span class="mini-text-icon">рџ”•</span>':""}</div><time>${last.created_at?displayClock(last):""}</time></div>
+      <div class="tg-chat-bottomline"><div class="tg-chat-preview">${last.mine?'<span class="you-prefix">Р’С‹:</span> ':""}${RMesUI.esc(preview.length>54?preview.slice(0,53)+"вЂ¦":preview)}</div>${row.unread?`<span class="tg-unread">${row.unread>99?"99+":row.unread}</span>`:""}</div></div></a>`;
   }
   let sidebarSyncBusy=false;
   async function refreshSidebarState(){
@@ -285,27 +285,27 @@ document.addEventListener("DOMContentLoaded",()=>{
       recomputeChatUnreadTotal();
     }catch(_){}finally{sidebarSyncBusy=false}
   }
-  setInterval(refreshSidebarState,1500);
+  setInterval(refreshSidebarState,5000);
   function formatLastSeen(iso){
     const lang=globalCfg.language||document.body?.dataset.language||"ru";
-    if(!iso)return lang==="en"?"last seen a long time ago":lang==="uz"?"uzoq vaqt oldin onlayn bo‘lgan":"давно не был(а) в сети";
+    if(!iso)return lang==="en"?"last seen a long time ago":lang==="uz"?"uzoq vaqt oldin onlayn boвЂlgan":"РґР°РІРЅРѕ РЅРµ Р±С‹Р»(Р°) РІ СЃРµС‚Рё";
     const d=new Date(iso),diff=Math.max(0,serverNow()-d.getTime());
-    if(diff<60000)return lang==="en"?"last seen just now":lang==="uz"?"hozirgina onlayn edi":"был(а) только что";
-    if(diff<3600000){const minutes=Math.max(1,Math.floor(diff/60000));return lang==="en"?`last seen ${minutes} min ago`:lang==="uz"?`${minutes} daqiqa oldin onlayn edi`:`был(а) ${minutes} мин. назад`}
-    if(dayFormatter.format(d)===dayFormatter.format(new Date(serverNow())))return lang==="en"?`last seen today at ${appClock(d)}`:lang==="uz"?`bugun ${appClock(d)} da onlayn edi`:`был(а) сегодня в ${appClock(d)}`;
-    return lang==="en"?`last seen ${dateFormatter.format(d)} ${appClock(d)}`:lang==="uz"?`${dateFormatter.format(d)} da onlayn edi`:`был(а) ${dateFormatter.format(d)} в ${appClock(d)}`;
+    if(diff<60000)return lang==="en"?"last seen just now":lang==="uz"?"hozirgina onlayn edi":"Р±С‹Р»(Р°) С‚РѕР»СЊРєРѕ С‡С‚Рѕ";
+    if(diff<3600000){const minutes=Math.max(1,Math.floor(diff/60000));return lang==="en"?`last seen ${minutes} min ago`:lang==="uz"?`${minutes} daqiqa oldin onlayn edi`:`Р±С‹Р»(Р°) ${minutes} РјРёРЅ. РЅР°Р·Р°Рґ`}
+    if(dayFormatter.format(d)===dayFormatter.format(new Date(serverNow())))return lang==="en"?`last seen today at ${appClock(d)}`:lang==="uz"?`bugun ${appClock(d)} da onlayn edi`:`Р±С‹Р»(Р°) СЃРµРіРѕРґРЅСЏ РІ ${appClock(d)}`;
+    return lang==="en"?`last seen ${dateFormatter.format(d)} ${appClock(d)}`:lang==="uz"?`${dateFormatter.format(d)} da onlayn edi`:`Р±С‹Р»(Р°) ${dateFormatter.format(d)} РІ ${appClock(d)}`;
   }
   function hiddenPresenceLabel(){
     const lang=globalCfg.language||document.body?.dataset.language||"ru";
-    return lang==="en"?"last seen time hidden":lang==="uz"?"oxirgi tashrif vaqti yashirilgan":"время посещения скрыто";
+    return lang==="en"?"last seen time hidden":lang==="uz"?"oxirgi tashrif vaqti yashirilgan":"РІСЂРµРјСЏ РїРѕСЃРµС‰РµРЅРёСЏ СЃРєСЂС‹С‚Рѕ";
   }
   function recentlyPresenceLabel(){
     const lang=globalCfg.language||document.body?.dataset.language||"ru";
-    return lang==="en"?"last seen recently":lang==="uz"?"yaqinda onlayn edi":"был(а) недавно";
+    return lang==="en"?"last seen recently":lang==="uz"?"yaqinda onlayn edi":"Р±С‹Р»(Р°) РЅРµРґР°РІРЅРѕ";
   }
   function onlinePresenceLabel(){
     const lang=globalCfg.language||document.body?.dataset.language||"ru";
-    return lang==="en"?"online":lang==="uz"?"onlayn":"в сети";
+    return lang==="en"?"online":lang==="uz"?"onlayn":"РІ СЃРµС‚Рё";
   }
   function applyPresence(item){
     const uid=String(item.user_id||"");if(!uid)return;
@@ -388,10 +388,10 @@ document.addEventListener("DOMContentLoaded",()=>{
     return true;
   }
   async function callSignalHttp(payload){
-    if(!globalCfg.callSignalUrl)throw new Error("Сигнализация звонка недоступна");
+    if(!globalCfg.callSignalUrl)throw new Error("РЎРёРіРЅР°Р»РёР·Р°С†РёСЏ Р·РІРѕРЅРєР° РЅРµРґРѕСЃС‚СѓРїРЅР°");
     const r=await fetch(globalCfg.callSignalUrl,{method:"POST",credentials:"same-origin",headers:{"X-CSRFToken":RMesUI.csrf(),"X-Requested-With":"XMLHttpRequest","Content-Type":"application/json"},body:JSON.stringify({...payload,media:"audio"})});
-    if(authSessionLost(r))throw new Error("Сессия завершена");
-    const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||"Сигнализация звонка недоступна");return j;
+    if(authSessionLost(r))throw new Error("РЎРµСЃСЃРёСЏ Р·Р°РІРµСЂС€РµРЅР°");
+    const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||"РЎРёРіРЅР°Р»РёР·Р°С†РёСЏ Р·РІРѕРЅРєР° РЅРµРґРѕСЃС‚СѓРїРЅР°");return j;
   }
   function stopGlobalCallRing(){if(globalCallRingTimer){clearInterval(globalCallRingTimer);globalCallRingTimer=null}}
   function globalCallPing(){
@@ -404,10 +404,10 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(existing){try{const e=JSON.parse(existing);if(e.call_id&&e.call_id!==d.call_id){callSignal({type:"call_busy",call_id:d.call_id,conversation_id:d.conversation_id,reason:"busy"});return}}catch(_){}}
     pendingGlobalCall={...d,media:"audio",received_at:serverNow()};
     sessionStorage.setItem("rmes:pending-call",JSON.stringify(pendingGlobalCall));
-    const name=d.from_name||"Пользователь";
+    const name=d.from_name||"РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ";
     const nameEl=document.querySelector("#globalCallName"),typeEl=document.querySelector("#globalCallType"),avatarEl=document.querySelector("#globalCallAvatar");
     if(nameEl)nameEl.textContent=name;
-    if(typeEl)typeEl.textContent="Входящий аудиозвонок";
+    if(typeEl)typeEl.textContent="Р’С…РѕРґСЏС‰РёР№ Р°СѓРґРёРѕР·РІРѕРЅРѕРє";
     if(avatarEl){avatarEl.innerHTML=d.from_avatar?`<img src="${RMesUI.esc(d.from_avatar)}" alt="">`:`<span>${RMesUI.esc(name.slice(0,1).toUpperCase())}</span>`}
     globalCallOverlay?.classList.remove("hidden");
     stopGlobalCallRing();globalCallPing();globalCallRingTimer=setInterval(globalCallPing,1700);
@@ -416,11 +416,11 @@ document.addEventListener("DOMContentLoaded",()=>{
       const callUrl=`/c/${encodeURIComponent(d.conversation_id)}/?incoming_call=${encodeURIComponent(d.call_id)}`;
       const browserFallback=()=>{
         if("Notification" in window&&Notification.permission==="granted"){
-          try{const n=new Notification("Входящий звонок",{body:`${name} · аудиозвонок`,icon:callAvatar||undefined,tag:`rmes-call-${d.call_id}`,requireInteraction:true});n.onclick=()=>{window.focus();location.href=callUrl;n.close()}}catch(_){}
+          try{const n=new Notification("Р’С…РѕРґСЏС‰РёР№ Р·РІРѕРЅРѕРє",{body:`${name} В· Р°СѓРґРёРѕР·РІРѕРЅРѕРє`,icon:callAvatar||undefined,tag:`rmes-call-${d.call_id}`,requireInteraction:true});n.onclick=()=>{window.focus();location.href=callUrl;n.close()}}catch(_){}
         }
       };
       if(window.RMesDesktop?.showNotification){
-        window.RMesDesktop.showNotification({title:"Входящий звонок",body:`${name} · аудиозвонок`,url:callUrl,icon:callAvatar,silent:false,tag:`rmes-call-${d.call_id}`}).then(result=>{if(result?.ok===false)browserFallback()}).catch(browserFallback);
+        window.RMesDesktop.showNotification({title:"Р’С…РѕРґСЏС‰РёР№ Р·РІРѕРЅРѕРє",body:`${name} В· Р°СѓРґРёРѕР·РІРѕРЅРѕРє`,url:callUrl,icon:callAvatar,silent:false,tag:`rmes-call-${d.call_id}`}).then(result=>{if(result?.ok===false)browserFallback()}).catch(browserFallback);
       }else browserFallback();
     }
   }
@@ -482,7 +482,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(!globalCfg.callPollUrl||callPollBusy)return;callPollBusy=true;
     try{const sep=globalCfg.callPollUrl.includes("?")?"&":"?";const r=await fetch(`${globalCfg.callPollUrl}${sep}after=${encodeURIComponent(callCursor)}&client_id=${encodeURIComponent(presenceClientId)}`,{headers:{"X-Requested-With":"XMLHttpRequest"},cache:"no-store"});if(authSessionLost(r)||!r.ok)return;const j=await r.json();syncServerClock(j.server_time);for(const evt of (j.events||[]))handleAppRealtime(evt);if(j.cursor!==undefined){callCursor=String(j.cursor||0);sessionStorage.setItem(callCursorKey,callCursor)}}catch(_){}finally{callPollBusy=false}
   }
-  pollCallSignals();setInterval(pollCallSignals,500);
+  pollCallSignals();setInterval(pollCallSignals,1500);
   function connectAppWs(){
     clearTimeout(appWsTimer);
     if(presenceClosing)return;
@@ -502,7 +502,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(Date.now()-lastAppPong>12000){try{appWs.close()}catch(_){}}
     }else publishPresenceHttp(active);
   },3000);
-  const presenceRefresh=setInterval(refreshPresenceBatch,1000);
+  const presenceRefresh=setInterval(refreshPresenceBatch,5000);
   const activityChanged=()=>{sendPresence(true);if(currentPresenceActive()){refreshNotifications();refreshPresenceBatch()}};
   window.addEventListener("focus",activityChanged);window.addEventListener("blur",activityChanged);document.addEventListener("visibilitychange",activityChanged);window.addEventListener("rmes-native-visibility",activityChanged);
   window.addEventListener("online",()=>{if(!presenceClosing){connectAppWs();sendPresence(true)}refreshNotifications();refreshPresenceBatch()});
@@ -542,26 +542,26 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
 
   function render(data){
-    const people=section("Люди",data.people,p=>`
+    const people=section("Р›СЋРґРё",data.people,p=>`
       <a class="tg-search-result" href="${p.blocked?"#":p.url}" ${p.blocked?'data-blocked-result="1"':""}>
         ${avatar(p)}
         <div class="tg-search-result-copy"><b>${RMesUI.esc(p.name)}</b>
-          <span>${p.handle?`@${RMesUI.esc(p.handle)} · `:""}${RMesUI.esc(p.status||p.email)}</span>
+          <span>${p.handle?`@${RMesUI.esc(p.handle)} В· `:""}${RMesUI.esc(p.status||p.email)}</span>
         </div>
-        ${p.blocked?'<span class="tg-search-tag">заблокирован</span>':""}
+        ${p.blocked?'<span class="tg-search-tag">Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ</span>':""}
       </a>`);
-    const chats=section("Чаты",data.chats,c=>`
+    const chats=section("Р§Р°С‚С‹",data.chats,c=>`
       <a class="tg-search-result" href="${c.url}">
         ${avatar(c)}
-        <div class="tg-search-result-copy"><b>${RMesUI.esc(c.title)}</b><span>${c.kind==="channel"?"Канал":c.kind==="group"?"Группа":"Личный чат"}</span></div>
+        <div class="tg-search-result-copy"><b>${RMesUI.esc(c.title)}</b><span>${c.kind==="channel"?"РљР°РЅР°Р»":c.kind==="group"?"Р“СЂСѓРїРїР°":"Р›РёС‡РЅС‹Р№ С‡Р°С‚"}</span></div>
         ${c.unread?`<span class="tg-unread">${c.unread}</span>`:""}
       </a>`);
-    const msgs=section("Сообщения",data.messages,m=>`
+    const msgs=section("РЎРѕРѕР±С‰РµРЅРёСЏ",data.messages,m=>`
       <a class="tg-search-message-result" href="${m.url}">
         <div class="tg-search-message-head"><b>${RMesUI.esc(m.chat)}</b><time>${RMesUI.esc(m.time)}</time></div>
         <span><strong>${RMesUI.esc(m.sender)}:</strong> ${RMesUI.esc(m.text)}</span>
       </a>`);
-    results.innerHTML=people+chats+msgs || '<div class="tg-search-empty">Ничего не найдено</div>';
+    results.innerHTML=people+chats+msgs || '<div class="tg-search-empty">РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ</div>';
     window.RMesI18n?.refresh?.();
     results.classList.remove("hidden");
   }
@@ -575,7 +575,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(!r.ok)throw new Error();
       render(await r.json());
     }catch(_){
-      results.innerHTML='<div class="tg-search-empty">Ошибка поиска</div>';results.classList.remove("hidden");
+      results.innerHTML='<div class="tg-search-empty">РћС€РёР±РєР° РїРѕРёСЃРєР°</div>';results.classList.remove("hidden");
     }
   },140);
 
@@ -583,7 +583,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   input.addEventListener("focus",()=>{if(input.value.trim())run()});
   clear?.addEventListener("click",()=>{input.value="";input.focus();clear.classList.add("hidden");results.classList.add("hidden")});
   results.addEventListener("click",e=>{
-    if(e.target.closest("[data-blocked-result]")){e.preventDefault();RMesUI.toast("Диалог недоступен из-за блокировки","error")}
+    if(e.target.closest("[data-blocked-result]")){e.preventDefault();RMesUI.toast("Р”РёР°Р»РѕРі РЅРµРґРѕСЃС‚СѓРїРµРЅ РёР·-Р·Р° Р±Р»РѕРєРёСЂРѕРІРєРё","error")}
   });
   document.addEventListener("click",e=>{if(!results.contains(e.target)&&e.target!==input)results.classList.add("hidden")});
 });
@@ -596,11 +596,11 @@ document.addEventListener("click",async e=>{
   try{
     const fd=new FormData();fd.append("option_id",btn.dataset.optionId);
     const r=await fetch(btn.dataset.pollVoteUrl,{method:"POST",headers:{"X-CSRFToken":RMesUI.csrf(),"X-Requested-With":"XMLHttpRequest"},body:fd});
-    const j=await r.json();if(!r.ok)throw new Error(j.detail||"Ошибка голосования");
+    const j=await r.json();if(!r.ok)throw new Error(j.detail||"РћС€РёР±РєР° РіРѕР»РѕСЃРѕРІР°РЅРёСЏ");
     if(j.poll){
       const box=btn.closest(".tg-poll");
       j.poll.options.forEach(o=>{const x=box.querySelector(`[data-option-id="${o.id}"] b`);if(x)x.textContent=o.votes});
-      const meta=box.querySelector(".tg-poll-meta");if(meta)meta.textContent=`${j.poll.options.reduce((a,o)=>a+o.votes,0)} голосов${j.poll.anonymous?" · анонимный":""}${j.poll.multiple_choice?" · несколько вариантов":""}`;
+      const meta=box.querySelector(".tg-poll-meta");if(meta)meta.textContent=`${j.poll.options.reduce((a,o)=>a+o.votes,0)} РіРѕР»РѕСЃРѕРІ${j.poll.anonymous?" В· Р°РЅРѕРЅРёРјРЅС‹Р№":""}${j.poll.multiple_choice?" В· РЅРµСЃРєРѕР»СЊРєРѕ РІР°СЂРёР°РЅС‚РѕРІ":""}`;
     }
   }catch(err){RMesUI.toast(err.message,"error")}
 });
@@ -673,21 +673,21 @@ document.addEventListener("DOMContentLoaded",()=>{
   async function install(){
     const btn=updateButton();if(!btn)return;
     const url=banner.dataset.updateUrl||"",version=banner.dataset.latestVersion||"",sha256=banner.dataset.updateSha256||"";
-    if(!url){RMesUI.toast("Файл обновления ещё не опубликован");return}
-    btn.disabled=true;btn.textContent="Загрузка…";
+    if(!url){RMesUI.toast("Р¤Р°Р№Р» РѕР±РЅРѕРІР»РµРЅРёСЏ РµС‰С‘ РЅРµ РѕРїСѓР±Р»РёРєРѕРІР°РЅ");return}
+    btn.disabled=true;btn.textContent="Р—Р°РіСЂСѓР·РєР°вЂ¦";
     try{
       if(window.RMesDesktop?.installUpdate){
         const result=await window.RMesDesktop.installUpdate({url,version,sha256});
-        if(!result?.ok)throw new Error(result?.error||"Не удалось запустить обновление");
+        if(!result?.ok)throw new Error(result?.error||"РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РїСѓСЃС‚РёС‚СЊ РѕР±РЅРѕРІР»РµРЅРёРµ");
         btn.remove();
         const note=banner.querySelector(".client-update-note");
-        if(note)note.textContent=result.managed?"Обновление загружается внутри приложения…":"Обновление запускается…";
+        if(note)note.textContent=result.managed?"РћР±РЅРѕРІР»РµРЅРёРµ Р·Р°РіСЂСѓР¶Р°РµС‚СЃСЏ РІРЅСѓС‚СЂРё РїСЂРёР»РѕР¶РµРЅРёСЏвЂ¦":"РћР±РЅРѕРІР»РµРЅРёРµ Р·Р°РїСѓСЃРєР°РµС‚СЃСЏвЂ¦";
         banner.dataset.installing="1";return;
       }
       banner.remove();
       location.href=url;
-      setTimeout(()=>{btn.disabled=false;btn.textContent="Обновить"},2500);
-    }catch(err){btn.disabled=false;btn.textContent="Обновить";RMesUI.toast(err.message||"Ошибка обновления","error")}
+      setTimeout(()=>{btn.disabled=false;btn.textContent="РћР±РЅРѕРІРёС‚СЊ"},2500);
+    }catch(err){btn.disabled=false;btn.textContent="РћР±РЅРѕРІРёС‚СЊ";RMesUI.toast(err.message||"РћС€РёР±РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ","error")}
   }
   function bind(){updateButton()?.addEventListener("click",install,{once:true})}
   async function checkReady(){
@@ -700,8 +700,8 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(!j.available){banner.remove();if(pollTimer)clearInterval(pollTimer);return}
       if(j.artifact_ready&&j.update_url){
         banner.dataset.ready="1";banner.dataset.updateUrl=j.update_url;banner.dataset.updateSha256=j.sha256||"";banner.dataset.latestVersion=j.latest_version||banner.dataset.latestVersion;
-        const status=banner.querySelector(".client-update-preparing");if(status)status.outerHTML='<button type="button" id="clientUpdateBtn">Обновить</button>';
-        const note=banner.querySelector(".client-update-note");if(note)note.textContent=j.release_notes||"Пакет обновления готов к установке.";
+        const status=banner.querySelector(".client-update-preparing");if(status)status.outerHTML='<button type="button" id="clientUpdateBtn">РћР±РЅРѕРІРёС‚СЊ</button>';
+        const note=banner.querySelector(".client-update-note");if(note)note.textContent=j.release_notes||"РџР°РєРµС‚ РѕР±РЅРѕРІР»РµРЅРёСЏ РіРѕС‚РѕРІ Рє СѓСЃС‚Р°РЅРѕРІРєРµ.";
         bind();if(pollTimer)clearInterval(pollTimer);
       }
     }catch(_){}
@@ -712,9 +712,9 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(pollTimer)clearInterval(pollTimer);banner.remove();return;
     }
     const btn=updateButton();if(!btn)return;
-    if(state.state==="downloading"){btn.disabled=true;btn.textContent=`Загрузка ${state.percent||0}%`}
-    else if(state.state==="ready"){btn.disabled=false;btn.textContent="Перезапустить и обновить";btn.addEventListener("click",install,{once:true})}
-    else if(state.state==="error"){btn.disabled=false;btn.textContent="Повторить обновление"}
+    if(state.state==="downloading"){btn.disabled=true;btn.textContent=`Р—Р°РіСЂСѓР·РєР° ${state.percent||0}%`}
+    else if(state.state==="ready"){btn.disabled=false;btn.textContent="РџРµСЂРµР·Р°РїСѓСЃС‚РёС‚СЊ Рё РѕР±РЅРѕРІРёС‚СЊ";btn.addEventListener("click",install,{once:true})}
+    else if(state.state==="error"){btn.disabled=false;btn.textContent="РџРѕРІС‚РѕСЂРёС‚СЊ РѕР±РЅРѕРІР»РµРЅРёРµ"}
   });
   if(banner.dataset.ready!=="1"){checkReady();pollTimer=setInterval(checkReady,10000)}
 });
@@ -730,21 +730,21 @@ document.addEventListener("click",async e=>{
   const ios=ua.match(/RMesIOS\/([0-9A-Za-z._+-]+)/i);
   const platform=desktop?"windows":android?"android":ios?"ios":"";
   const current=(desktop||android||ios)?.[1]||"0";
-  if(!platform){RMesUI.toast("Обновления доступны только в приложении");return}
+  if(!platform){RMesUI.toast("РћР±РЅРѕРІР»РµРЅРёСЏ РґРѕСЃС‚СѓРїРЅС‹ С‚РѕР»СЊРєРѕ РІ РїСЂРёР»РѕР¶РµРЅРёРё");return}
   try{
     btn.disabled=true;
     const r=await fetch(`/ops/client-policy/?platform=${encodeURIComponent(platform)}&current=${encodeURIComponent(current)}`,{headers:{"X-Requested-With":"XMLHttpRequest"}});
     const j=await r.json();
-    if(!r.ok)throw new Error("Не удалось проверить обновление");
-    if(!j.available){RMesUI.toast(`Установлена актуальная версия ${current}`);return}
-    if(!j.artifact_ready&&!j.update_url){RMesUI.toast(`Версия ${j.latest_version} уже объявлена, пакет ещё не опубликован`);return}
+    if(!r.ok)throw new Error("РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕРІРµСЂРёС‚СЊ РѕР±РЅРѕРІР»РµРЅРёРµ");
+    if(!j.available){RMesUI.toast(`РЈСЃС‚Р°РЅРѕРІР»РµРЅР° Р°РєС‚СѓР°Р»СЊРЅР°СЏ РІРµСЂСЃРёСЏ ${current}`);return}
+    if(!j.artifact_ready&&!j.update_url){RMesUI.toast(`Р’РµСЂСЃРёСЏ ${j.latest_version} СѓР¶Рµ РѕР±СЉСЏРІР»РµРЅР°, РїР°РєРµС‚ РµС‰С‘ РЅРµ РѕРїСѓР±Р»РёРєРѕРІР°РЅ`);return}
     if(window.RMesDesktop?.installUpdate){
       const result=await window.RMesDesktop.installUpdate({url:j.update_url,version:j.latest_version,sha256:j.sha256||""});
-      if(!result?.ok)throw new Error(result?.error||"Не удалось установить обновление");
+      if(!result?.ok)throw new Error(result?.error||"РќРµ СѓРґР°Р»РѕСЃСЊ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РѕР±РЅРѕРІР»РµРЅРёРµ");
       return;
     }
     location.href=j.update_url;
-  }catch(err){RMesUI.toast(err.message||"Ошибка обновления","error")}
+  }catch(err){RMesUI.toast(err.message||"РћС€РёР±РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ","error")}
   finally{btn.disabled=false}
 });
 
@@ -780,3 +780,17 @@ document.addEventListener("click",async e=>{
     navigator.serviceWorker.controller?.postMessage({type:"PURGE_PRIVATE"});
   });
 })();
+
+// rmes-mobile-touch-prefetch
+document.addEventListener("touchstart", e => {
+  const a = e.target.closest?.('a[data-soft-nav="1"]');
+  if (!a || !a.href) return;
+  try {
+    fetch(a.href, {
+      credentials: "same-origin",
+      headers: {"X-R-Mes-Prefetch":"1"},
+      cache: "force-cache"
+    }).catch(() => {});
+  } catch (_) {}
+}, {passive:true, capture:true});
+
