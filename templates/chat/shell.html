@@ -55,25 +55,26 @@
         <a href="{% url 'accounts:logout' %}" class="danger-link">Выйти</a>
       </div>
     </div>
-
-
-    <nav class="tg-folder-tabs">
-      <a href="{% url 'chat:home' %}?folder=all" class="{% if folder == 'all' or not folder %}active{% endif %}">Все</a>
-      <a href="{% url 'chat:home' %}?folder=direct" class="{% if folder == 'direct' %}active{% endif %}">Личные</a>
-      <a href="{% url 'chat:home' %}?folder=groups" class="{% if folder == 'groups' %}active{% endif %}">Группы</a>
-      <a href="{% url 'chat:home' %}?folder=channels" class="{% if folder == 'channels' %}active{% endif %}">Каналы</a>
-      <a href="{% url 'chat:home' %}?folder=unread" class="{% if folder == 'unread' %}active{% endif %}">Непрочитанные <span id="sidebarUnreadTotal" class="tg-folder-count hidden"></span></a>
-      {% for f in custom_folders %}<a href="{% url 'chat:home' %}?folder=f-{{ f.pk }}">{{ f.name }}</a>{% endfor %}
-      <a href="{% url 'chat:home' %}?folder=archived" class="{% if folder == 'archived' %}active{% endif %}">Архив</a>
+    <nav class="tg-folder-tabs" id="folderTabs" data-current-folder="{{ folder|default:'all' }}">
+      <a data-folder="all" href="{% url 'chat:home' %}?folder=all" class="{% if folder == 'all' or not folder %}active{% endif %}">Все</a>
+      <a data-folder="saved" href="{% url 'chat:home' %}?folder=saved" class="{% if folder == 'saved' %}active{% endif %}">Избранное</a>
+      <a data-folder="direct" href="{% url 'chat:home' %}?folder=direct" class="{% if folder == 'direct' %}active{% endif %}">Личные</a>
+      <a data-folder="groups" href="{% url 'chat:home' %}?folder=groups" class="{% if folder == 'groups' %}active{% endif %}">Группы</a>
+      <a data-folder="channels" href="{% url 'chat:home' %}?folder=channels" class="{% if folder == 'channels' %}active{% endif %}">Каналы</a>
+      <a data-folder="unread" href="{% url 'chat:home' %}?folder=unread" class="{% if folder == 'unread' %}active{% endif %}">Непрочитанные <span id="sidebarUnreadTotal" class="tg-folder-count hidden"></span></a>
+      {% for f in custom_folders %}<a data-folder="f-{{ f.pk }}" href="{% url 'chat:home' %}?folder=f-{{ f.pk }}">{{ f.name }}</a>{% endfor %}
+      <a data-folder="archived" href="{% url 'chat:home' %}?folder=archived" class="{% if folder == 'archived' %}active{% endif %}">Архив</a>
     </nav>
 
     <div class="tg-chat-list" id="chatList">
       {% for card in cards %}
-      <a class="tg-chat-item {% if conversation and card.conversation.pk == conversation.pk %}active{% endif %}" data-conversation-id="{{ card.conversation.pk }}" data-peer-id="{% if card.peer %}{{ card.peer.pk }}{% endif %}" data-soft-nav="1" href="{% url 'chat:conversation' card.conversation.pk %}?folder={{ folder|default:'all' }}">
+      <a class="tg-chat-item {% if conversation and card.conversation.pk == conversation.pk %}active{% endif %}" data-conversation-id="{{ card.conversation.pk }}" data-kind="{{ card.conversation.kind }}" data-peer-id="{% if card.peer %}{{ card.peer.pk }}{% endif %}" data-soft-nav="1" href="{% url 'chat:conversation' card.conversation.pk %}?folder={{ folder|default:'all' }}">
         <div class="tg-avatar-wrap">
           <div class="tg-avatar">
             {% if card.peer and card.peer.avatar_url %}
               <img src="{{ card.peer.avatar_url }}" alt="">
+            {% elif card.conversation.kind == "saved" %}
+              <span>★</span>
             {% elif card.conversation.kind == "channel" %}
               <span>#</span>
             {% else %}

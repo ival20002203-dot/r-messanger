@@ -2,7 +2,8 @@ from datetime import timedelta
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q,OuterRef,Subquery,Count,IntegerField,BigIntegerField,Value
+from django.db.models.functions import Coalesce
 import re
 from django.urls import reverse
 from django.utils import timezone
@@ -61,6 +62,7 @@ def get_saved_conversation(user):
         if conv.title!="Избранное":
             Conversation.objects.filter(pk=conv.pk).update(title="Избранное")
             conv.title="Избранное"
+        ConversationMember.objects.filter(conversation=conv,user=user).update(is_hidden=False,is_archived=False)
         return conv
     with transaction.atomic():
         conv=Conversation.objects.create(kind=Conversation.Kind.SAVED,title="Избранное",created_by=user)
@@ -434,6 +436,8 @@ def delete_message_for_user(actor,message,scope="everyone",reason="user request"
     return {"scope":"everyone","hidden_for_user_ids":[m.user_id for m in members],"protected_developer_ids":[]}
 
 def conversation_cards(user,query="",folder="all"):
+    # Saved Messages is a first-class Telegram-like chat and should always exist.
+    get_saved_conversation(user)
     ms=ConversationMember.objects.filter(user=user,conversation__is_archived=False,is_hidden=False).select_related(
         "conversation","conversation__pinned_message"
     ).prefetch_related("conversation__members__user")
@@ -448,28 +452,46 @@ def conversation_cards(user,query="",folder="all"):
         elif folder.startswith("f-") and folder[2:].isdigit():
             ids=ChatFolderConversation.objects.filter(folder_id=int(folder[2:]),folder__user=user).values_list("conversation_id",flat=True)
             ms=ms.filter(conversation_id__in=ids)
+
+    zero=Value(0,output_field=BigIntegerField())
+    visible_cutoff=Coalesce(OuterRef("hidden_before_message_id"),zero,output_field=BigIntegerField())
+    read_cutoff=Coalesce(OuterRef("last_read_message_id"),zero,output_field=BigIntegerField())
+    last_message_qs=(Message.objects
+        .filter(conversation_id=OuterRef("conversation_id"),id__gt=visible_cutoff)
+        .exclude(hidden_for__user=user)
+        .order_by("-created_at","-id"))
+    unread_qs=(Message.objects
+        .filter(conversation_id=OuterRef("conversation_id"),id__gt=read_cutoff)
+        .filter(id__gt=visible_cutoff)
+        .exclude(sender=user)
+        .exclude(hidden_for__user=user)
+        .values("conversation_id")
+        .annotate(total=Count("id"))
+        .values("total"))
+    ms=ms.annotate(
+        _last_message_id=Subquery(last_message_qs.values("id")[:1],output_field=BigIntegerField()),
+        _unread_count=Coalesce(Subquery(unread_qs[:1],output_field=IntegerField()),Value(0),output_field=IntegerField()),
+    )
+    members=list(ms)
+    last_ids=[m._last_message_id for m in members if m._last_message_id]
+    last_map={m.pk:m for m in Message.objects.filter(pk__in=last_ids).select_related("sender").prefetch_related("attachments")}
+
     cards=[]
     q=(query or "").strip()
     normalized_q=q.lstrip("@")
-    for m in ms:
+    for m in members:
         c=m.conversation
-        msgs=visible_messages_for(user,c)
-        # IDs are not a clock (imports/retries can allocate them out of order),
-        # therefore the sidebar must choose the newest message by its server
-        # timestamp first.
-        last=msgs.select_related("sender").order_by("-created_at","-id").first()
-        unread_q=msgs.exclude(sender=user)
-        if m.last_read_message_id:unread_q=unread_q.filter(id__gt=m.last_read_message_id)
-        unread=unread_q.count()
+        last=last_map.get(m._last_message_id)
+        unread=int(m._unread_count or 0)
         title=c.display_title_for(user)
         if folder=="unread" and not unread:continue
+        peer=c.peer_for(user)
         if q:
             ql=normalized_q.lower()
-            peer=c.peer_for(user)
             searchable=" ".join(filter(None,[title,peer.email if peer else "",peer.handle if peer else "",("" if (last and last.is_deleted) else (last.body if last else ""))])).lower()
             if ql not in searchable:continue
-        cards.append({"conversation":c,"membership":m,"title":title,"last":last,"unread":unread,"peer":c.peer_for(user)})
-    cards.sort(key=lambda x:(not x["membership"].is_pinned,-x["conversation"].updated_at.timestamp()))
+        cards.append({"conversation":c,"membership":m,"title":title,"last":last,"unread":unread,"peer":peer})
+    cards.sort(key=lambda x:(x["conversation"].kind!=Conversation.Kind.SAVED,not x["membership"].is_pinned,-x["conversation"].updated_at.timestamp()))
     return cards
 
 def message_payload(msg):

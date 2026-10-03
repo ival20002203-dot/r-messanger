@@ -206,7 +206,7 @@
       }
     }finally{attachmentPollBusy=false}
   }
-  setInterval(refreshPendingAttachments,1000);
+  setInterval(()=>{if(!document.hidden)refreshPendingAttachments()},1600);
   function optimisticMessage(body,clientId){
     return {
       id:`pending-${clientId}`,client_message_id:clientId,body,created_at:new Date(serverTimestamp()).toISOString(),time_hm:formatClock(),
@@ -346,7 +346,7 @@
     if(recoveryBusy||!cfg.historyUrl)return;recoveryBusy=true;
     try{const after=latestMessageId();const r=await fetch(`${cfg.historyUrl}?after=${encodeURIComponent(after)}&limit=80`,{headers:{"X-Requested-With":"XMLHttpRequest"},cache:"no-store"});if(!r.ok)return;const j=await r.json();for(const m of (j.results||[]))upsertMessage(m);if((j.results||[]).some(m=>Number(m.sender?.id)!==Number(cfg.userId)))markReadSoon()}catch(_){}finally{recoveryBusy=false}
   }
-  setInterval(recoverRecentMessages,1200);
+  setInterval(()=>{if(!ws||ws.readyState!==WebSocket.OPEN)recoverRecentMessages()},3500);
   function connectWebSocket(){
     clearTimeout(reconnectTimer);
     if(exiting)return;

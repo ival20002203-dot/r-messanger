@@ -147,7 +147,7 @@ def conversation(request,conversation_id):
         center=int(jump)
         qs=qs.filter(id__gte=max(1,center-80),id__lte=center+80)
 
-    rows=list(reversed(list(qs[:140])))
+    rows=list(reversed(list(qs[:80])))
     if rows:mark_read(request.user,conv,rows[-1])
 
     cards=conversation_cards(request.user,folder=folder)

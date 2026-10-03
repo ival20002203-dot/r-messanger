@@ -1607,3 +1607,23 @@ body:not([data-theme="light"]) .tg-app{background:radial-gradient(circle at 18% 
   .tg-message { animation-duration: .10s !important; }
 }
 /* === RMES MOBILE TELEGRAM SAFE END === */
+
+/* === RMES MOBILE PLUS START === */
+.tg-chat-item[data-kind="saved"] .tg-avatar{
+  background:linear-gradient(145deg,#32b7f2,#168bd2)!important;color:#fff!important;box-shadow:0 6px 18px rgba(42,171,238,.22)
+}
+.tg-chat-item[data-kind="saved"] .tg-avatar span{font-size:20px!important;line-height:1}
+.tg-folder-tabs{scroll-snap-type:x proximity;overscroll-behavior-x:contain}
+.tg-folder-tabs>a{scroll-snap-align:center}
+.tg-chat-list.folder-switching{pointer-events:none;opacity:.78;transform:translateX(0);transition:opacity .10s linear,transform .12s ease}
+.tg-chat-list.folder-switching.to-next{transform:translateX(-8px)}
+.tg-chat-list.folder-switching.to-prev{transform:translateX(8px)}
+@media(max-width:820px){
+  .tg-folder-tabs{touch-action:pan-y;scroll-behavior:smooth}
+  .tg-sidebar{touch-action:pan-y}
+  .tg-chat{touch-action:pan-y}
+  .tg-chat-list{contain:layout paint;will-change:transform}
+  .tg-chat-item{content-visibility:auto;contain-intrinsic-size:72px}
+  .tg-message{content-visibility:auto;contain-intrinsic-size:48px}
+}
+/* === RMES MOBILE PLUS END === */

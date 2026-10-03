@@ -233,7 +233,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   notificationBell?.addEventListener("click",()=>refreshNotifications());
   refreshNotifications();
   // WebSocket is primary; 2.5 s polling is a deliberate recovery path for sleeping/minimized clients.
-  setInterval(refreshNotifications,5000);
+  setInterval(()=>{if(!document.hidden)refreshNotifications()},7000);
 
   if(globalCfg.desktopNotifications&&!window.RMesDesktop?.showNotification&&"Notification" in window&&Notification.permission==="default"){
     setTimeout(()=>Notification.requestPermission().catch(()=>{}),900);
@@ -258,11 +258,11 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
   function sidebarCardHtml(row){
     const peer=row.peer||null,initial=(row.title||"?").slice(0,1).toUpperCase();
-    const avatar=peer?.avatar?`<img src="${RMesUI.esc(peer.avatar)}" alt="">`:`<span>${row.kind==="channel"?"#":RMesUI.esc(initial)}</span>`;
+    const avatar=peer?.avatar?`<img src="${RMesUI.esc(peer.avatar)}" alt="">`:`<span>${row.kind==="saved"?"★":row.kind==="channel"?"#":RMesUI.esc(initial)}</span>`;
     const peerHidden=Boolean(peer?.hidden)||(Boolean(peer?.developer)&&!globalCfg.isDeveloper);
     const online=peer&&!peerHidden?`<span class="tg-online-dot ${peer.online?"":"hidden"}" data-online-dot></span>`:"";
     const last=row.last||{},preview=last.body||"Нет сообщений";
-    return `<a class="tg-chat-item ${String(row.id)===String(globalCfg.currentConversationId||"")?"active":""}" data-conversation-id="${RMesUI.esc(row.id)}" data-peer-id="${peer?.id||""}" data-soft-nav="1" href="${RMesUI.esc(row.url||(`/c/${row.id}/`))}">
+    return `<a class="tg-chat-item ${String(row.id)===String(globalCfg.currentConversationId||"")?"active":""}" data-conversation-id="${RMesUI.esc(row.id)}" data-kind="${RMesUI.esc(row.kind||"")}" data-peer-id="${peer?.id||""}" data-soft-nav="1" href="${RMesUI.esc(row.url||(`/c/${row.id}/`))}">
       <div class="tg-avatar-wrap"><div class="tg-avatar">${avatar}</div>${online}</div>
       <div class="tg-chat-copy"><div class="tg-chat-topline"><div class="tg-chat-title">${row.pinned?'<span class="mini-text-icon">📌</span>':""}<span>${RMesUI.esc(row.title||"Чат")}</span>${row.muted?'<span class="mini-text-icon">🔕</span>':""}</div><time>${last.created_at?displayClock(last):""}</time></div>
       <div class="tg-chat-bottomline"><div class="tg-chat-preview">${last.mine?'<span class="you-prefix">Вы:</span> ':""}${RMesUI.esc(preview.length>54?preview.slice(0,53)+"…":preview)}</div>${row.unread?`<span class="tg-unread">${row.unread>99?"99+":row.unread}</span>`:""}</div></div></a>`;
@@ -285,7 +285,82 @@ document.addEventListener("DOMContentLoaded",()=>{
       recomputeChatUnreadTotal();
     }catch(_){}finally{sidebarSyncBusy=false}
   }
-  setInterval(refreshSidebarState,4000);
+  setInterval(()=>{if(!document.hidden)refreshSidebarState()},12000);
+
+  // === RMES FOLDER SWIPE PLUS START ===
+  // Telegram-like folder switching: no full page reload, memory cache, horizontal swipes.
+  const folderTabs=document.querySelector("#folderTabs,.tg-folder-tabs");
+  const folderCache=new Map();
+  let folderSwitchBusy=false;
+  const folderCacheTtl=12000;
+  const folderNames=()=>folderTabs?[...folderTabs.querySelectorAll("a[data-folder]")].map(a=>a.dataset.folder).filter(Boolean):[];
+  const folderLink=folder=>folderTabs?.querySelector(`a[data-folder="${CSS.escape(String(folder))}"]`);
+  function setActiveFolder(folder){
+    if(!folderTabs)return;
+    folderTabs.dataset.currentFolder=folder;
+    folderTabs.querySelectorAll("a[data-folder]").forEach(a=>a.classList.toggle("active",a.dataset.folder===folder));
+    folderLink(folder)?.scrollIntoView?.({behavior:"smooth",block:"nearest",inline:"center"});
+  }
+  function emptyFolderHtml(){return '<div class="tg-sidebar-empty"><div class="tg-empty-icon">✦</div><b>Здесь пока пусто</b><span>Перейдите в другую папку или начните новый чат.</span></div>'}
+  async function fetchFolderRows(folder,force=false){
+    const cached=folderCache.get(folder);
+    if(!force&&cached&&(Date.now()-cached.at)<folderCacheTtl)return cached.data;
+    const r=await fetch(`${globalCfg.sidebarStateUrl}?folder=${encodeURIComponent(folder)}`,{headers:{"X-Requested-With":"XMLHttpRequest"},cache:"no-store"});
+    if(authSessionLost(r))throw new Error("auth");
+    if(!r.ok)throw new Error("Не удалось открыть папку");
+    const data=await r.json();if(data.server_time)syncServerClock(data.server_time);
+    folderCache.set(folder,{at:Date.now(),data});return data;
+  }
+  function rememberFolderScroll(folder){const list=document.querySelector("#chatList");if(list)sessionStorage.setItem(`rmes:folder-scroll:${folder}`,String(list.scrollTop||0))}
+  function restoreFolderScroll(folder){const list=document.querySelector("#chatList");if(!list)return;const v=sessionStorage.getItem(`rmes:folder-scroll:${folder}`);list.scrollTop=v?Number(v)||0:0}
+  async function switchFolderFast(folder,direction=0){
+    folder=String(folder||"all");if(folderSwitchBusy||folder===String(globalCfg.currentFolder||"all"))return;
+    const list=document.querySelector("#chatList");if(!list||!globalCfg.sidebarStateUrl)return;
+    const previous=String(globalCfg.currentFolder||"all");rememberFolderScroll(previous);folderSwitchBusy=true;
+    list.classList.add("folder-switching",direction>0?"to-next":"to-prev");setActiveFolder(folder);
+    try{
+      const data=await fetchFolderRows(folder);
+      list.innerHTML=(data.results||[]).map(sidebarCardHtml).join("")||emptyFolderHtml();
+      globalCfg.currentFolder=folder;restoreFolderScroll(folder);recomputeChatUnreadTotal();
+      const u=new URL(location.href);u.searchParams.set("folder",folder);history.replaceState({...history.state,rmesFolder:folder},"",u.pathname+u.search+u.hash);
+      if(navigator.vibrate)navigator.vibrate(7);
+      warmAdjacentFolders(folder);
+    }catch(err){setActiveFolder(previous);if(err.message!=="auth")RMesUI.toast(err.message||"Ошибка папки","error")}
+    finally{requestAnimationFrame(()=>list.classList.remove("folder-switching","to-next","to-prev"));folderSwitchBusy=false}
+  }
+  function warmAdjacentFolders(folder){
+    const names=folderNames(),i=names.indexOf(folder);if(i<0)return;
+    const warm=()=>{[names[i-1],names[i+1]].filter(Boolean).forEach(x=>fetchFolderRows(x).catch(()=>{}))};
+    if("requestIdleCallback" in window)requestIdleCallback(warm,{timeout:900});else setTimeout(warm,350);
+  }
+  folderTabs?.addEventListener("click",e=>{const a=e.target.closest("a[data-folder]");if(!a)return;e.preventDefault();const names=folderNames(),from=names.indexOf(String(globalCfg.currentFolder||"all")),to=names.indexOf(a.dataset.folder);switchFolderFast(a.dataset.folder,to>=from?1:-1)});
+  setActiveFolder(String(globalCfg.currentFolder||folderTabs?.dataset.currentFolder||"all"));
+  warmAdjacentFolders(String(globalCfg.currentFolder||"all"));
+  window.addEventListener("rmes:global-message",()=>folderCache.clear());
+  window.addEventListener("rmes:global-message-updated",()=>folderCache.clear());
+
+  // Swipe left/right over the chat list to move between folders.
+  const sidebarSurface=document.querySelector(".tg-sidebar");
+  let swipeX=0,swipeY=0,swipeAt=0;
+  sidebarSurface?.addEventListener("touchstart",e=>{if(e.touches.length!==1||e.target.closest("input,textarea,button,.tg-side-menu"))return;swipeX=e.touches[0].clientX;swipeY=e.touches[0].clientY;swipeAt=Date.now()},{passive:true});
+  sidebarSurface?.addEventListener("touchend",e=>{
+    if(!swipeAt||!e.changedTouches?.length)return;
+    const dx=e.changedTouches[0].clientX-swipeX,dy=e.changedTouches[0].clientY-swipeY,dt=Date.now()-swipeAt;swipeAt=0;
+    // When a chat is open and the sidebar is shown, a left swipe closes it first.
+    if(document.body.classList.contains("sidebar-open")&&document.querySelector(".tg-app.mobile-chat-open")&&dx<-70&&Math.abs(dx)>Math.abs(dy)*1.25){document.body.classList.remove("sidebar-open");return}
+    if(dt>650||Math.abs(dx)<58||Math.abs(dx)<Math.abs(dy)*1.25)return;
+    const names=folderNames(),current=String(globalCfg.currentFolder||"all"),i=names.indexOf(current);if(i<0)return;
+    const next=dx<0?names[i+1]:names[i-1];if(next)switchFolderFast(next,dx<0?1:-1);
+  },{passive:true});
+
+  // Telegram-like edge swipe from an open chat back to the chat list.
+  const chatSurface=document.querySelector(".tg-chat");
+  let backX=0,backY=0,backAt=0;
+  chatSurface?.addEventListener("touchstart",e=>{if(e.touches.length!==1)return;const t=e.touches[0];if(t.clientX>34)return;backX=t.clientX;backY=t.clientY;backAt=Date.now()},{passive:true});
+  chatSurface?.addEventListener("touchend",e=>{if(!backAt||!e.changedTouches?.length)return;const t=e.changedTouches[0],dx=t.clientX-backX,dy=t.clientY-backY,dt=Date.now()-backAt;backAt=0;if(dt<700&&dx>72&&Math.abs(dx)>Math.abs(dy)*1.3){document.body.classList.add("sidebar-open");if(navigator.vibrate)navigator.vibrate(8)}},{passive:true});
+  window.RMesFolders={switchTo:switchFolderFast,clearCache:()=>folderCache.clear()};
+  // === RMES FOLDER SWIPE PLUS END ===
+
   function formatLastSeen(iso){
     const lang=globalCfg.language||document.body?.dataset.language||"ru";
     if(!iso)return lang==="en"?"last seen a long time ago":lang==="uz"?"uzoq vaqt oldin onlayn bo‘lgan":"давно не был(а) в сети";
@@ -482,7 +557,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(!globalCfg.callPollUrl||callPollBusy)return;callPollBusy=true;
     try{const sep=globalCfg.callPollUrl.includes("?")?"&":"?";const r=await fetch(`${globalCfg.callPollUrl}${sep}after=${encodeURIComponent(callCursor)}&client_id=${encodeURIComponent(presenceClientId)}`,{headers:{"X-Requested-With":"XMLHttpRequest"},cache:"no-store"});if(authSessionLost(r)||!r.ok)return;const j=await r.json();syncServerClock(j.server_time);for(const evt of (j.events||[]))handleAppRealtime(evt);if(j.cursor!==undefined){callCursor=String(j.cursor||0);sessionStorage.setItem(callCursorKey,callCursor)}}catch(_){}finally{callPollBusy=false}
   }
-  pollCallSignals();setInterval(pollCallSignals,1000);
+  pollCallSignals();setInterval(()=>{if(!document.hidden)pollCallSignals()},1500);
   function connectAppWs(){
     clearTimeout(appWsTimer);
     if(presenceClosing)return;
@@ -502,7 +577,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(Date.now()-lastAppPong>12000){try{appWs.close()}catch(_){}}
     }else publishPresenceHttp(active);
   },3000);
-  const presenceRefresh=setInterval(refreshPresenceBatch,4000);
+  const presenceRefresh=setInterval(()=>{if(!document.hidden)refreshPresenceBatch()},5000);
   const activityChanged=()=>{sendPresence(true);if(currentPresenceActive()){refreshNotifications();refreshPresenceBatch()}};
   window.addEventListener("focus",activityChanged);window.addEventListener("blur",activityChanged);document.addEventListener("visibilitychange",activityChanged);window.addEventListener("rmes-native-visibility",activityChanged);
   window.addEventListener("online",()=>{if(!presenceClosing){connectAppWs();sendPresence(true)}refreshNotifications();refreshPresenceBatch()});
